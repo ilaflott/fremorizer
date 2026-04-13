@@ -5,6 +5,10 @@ on:
     tags:
       - '*'
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   tag-update:
     runs-on: ubuntu-latest
