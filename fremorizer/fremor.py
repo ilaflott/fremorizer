@@ -5,11 +5,10 @@ import logging
 import click
 
 from . import __version__ as version, FORMAT
-from . import cmor_find_subtool
-from . import cmor_run_subtool
-from . import cmor_yaml_subtool
-from . import cmor_config_subtool
-from .cmor_finder import make_simple_varlist
+from .cmor_finder import cmor_find_subtool, make_simple_varlist
+from .cmor_mixer import cmor_run_subtool
+from .cmor_yamler import cmor_yaml_subtool
+from .cmor_config import cmor_config_subtool
 
 fre_logger = logging.getLogger(__name__)
 
