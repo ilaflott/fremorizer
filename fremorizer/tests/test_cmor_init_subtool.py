@@ -8,8 +8,8 @@ Tests the cmor_init_subtool and its helper functions including:
 '''
 
 import json
+
 import pytest
-from pathlib import Path
 
 from fremorizer.cmor_init import (
     cmor_init_subtool,
@@ -62,7 +62,7 @@ def test_cmor_init_tables_dir_with_curl(tmp_path):
     # Look for the actual tables directory inside the extracted content
     # The structure is typically: tables_dir/cmip6-cmor-tables-<ref>/Tables/
     found_tables = False
-    for item in tables_dir.rglob('CMIP6_*.json'):
+    for _ in tables_dir.rglob('CMIP6_*.json'):
         found_tables = True
         break
 
@@ -99,7 +99,7 @@ def test_cmor_init_tables_dir_with_git(tmp_path):
 
     # Look for CMIP7 table files
     found_tables = False
-    for item in tables_dir.rglob('CMIP7_*.json'):
+    for _ in tables_dir.rglob('CMIP7_*.json'):
         found_tables = True
         break
 
@@ -203,26 +203,16 @@ def test_fetch_tables_curl_with_tag(tmp_path):
     '''Test fetching tables with a specific git tag using curl.
 
     This verifies that the tag parameter works correctly.
-    Note: This test uses a real tag from the CMIP6 repository.
-    If the tag doesn't exist, the test will fail, which is expected behavior.
+    Uses a known tag from the CMIP6 repository (6.9.33).
     '''
     tables_dir = tmp_path / 'tables_with_tag'
     repo_url = MIP_TABLE_REPOS['cmip6']
 
-    # Use a known release tag (check the repo for actual tags)
-    # For this test, we'll use a recent tag if available
-    # If the tag doesn't exist, subprocess.run will raise CalledProcessError
-    try:
-        _fetch_tables_curl(repo_url, str(tables_dir), tag='v6.2.56.6')
+    # Use a known release tag from the repository
+    # Tags follow pattern like '6.9.33', not 'v6.9.33'
+    _fetch_tables_curl(repo_url, str(tables_dir), tag='6.9.33')
 
-        # If successful, verify content was extracted
-        assert tables_dir.exists()
-        json_files = list(tables_dir.rglob('*.json'))
-        assert len(json_files) > 0
-    except Exception as e:
-        # If the specific tag doesn't exist, that's okay - we're testing the mechanism
-        # The important part is that the tag was properly passed to the curl command
-        if 'v6.2.56.6' in str(e) or '404' in str(e):
-            pytest.skip(f'Specific tag v6.2.56.6 not found in repository: {e}')
-        else:
-            raise
+    # Verify content was extracted
+    assert tables_dir.exists()
+    json_files = list(tables_dir.rglob('*.json'))
+    assert len(json_files) > 0
