@@ -32,6 +32,10 @@ from .conftest import (
 
 runner = CliRunner()
 
+# log format strings produced by the fremor group callback (cli.py / fremor)
+LOG_INFO_LINE = '[ INFO:                  cli.py:                  fremor] fre_file_handler added to base_fre_logger\n' # pylint: disable=line-too-long
+LOG_DEBUG_LINE = '[DEBUG:                  cli.py:                  fremor] click entry-point function call done.\n' # pylint: disable=line-too-long
+
 
 # ── setup ──────────────────────────────────────────────────────────────────
 
@@ -53,57 +57,39 @@ def test_cli_fremor_help():
     result = runner.invoke(fremor, args=["--help"])
     assert result.exit_code == 0
 
-def test_cli_fremor_help_and_debuglog():
-    ''' fremor -vv -l TEST_FOO_LOG.log yaml --help (logs created by group callback) '''
-    if Path("TEST_FOO_LOG.log").exists():
-        Path("TEST_FOO_LOG.log").unlink()
-    assert not Path("TEST_FOO_LOG.log").exists()
+def test_cli_fremor_help_and_debuglog(tmp_path):
+    ''' fremor -vv -l LOG yaml --help (logs created by group callback) '''
+    log_file = tmp_path / 'TEST_FOO_LOG.log'
 
-    result = runner.invoke(fremor, args=["-vv", "-l", "TEST_FOO_LOG.log", "yaml", "--help"])
+    result = runner.invoke(fremor, args=["-vv", "-l", str(log_file), "yaml", "--help"])
     assert result.exit_code == 0
-    assert Path("TEST_FOO_LOG.log").exists()
+    assert log_file.exists()
 
-    log_text_line_1='[ INFO:                  cli.py:                  fremor] fre_file_handler added to base_fre_logger\n' # pylint: disable=line-too-long
-    log_text_line_2='[DEBUG:                  cli.py:                  fremor] click entry-point function call done.\n' # pylint: disable=line-too-long
-    with open( "TEST_FOO_LOG.log", 'r', encoding='utf-8') as log_text:
-        line_list=log_text.readlines()
-        assert log_text_line_1 in line_list[0]
-        assert log_text_line_2 in line_list[1]
+    line_list = log_file.read_text(encoding='utf-8').splitlines(keepends=True)
+    assert LOG_INFO_LINE in line_list[0]
+    assert LOG_DEBUG_LINE in line_list[1]
 
-    Path("TEST_FOO_LOG.log").unlink()
+def test_cli_fremor_help_and_infolog(tmp_path):
+    ''' fremor -v -l LOG yaml --help '''
+    log_file = tmp_path / 'TEST_FOO_LOG.log'
 
-def test_cli_fremor_help_and_infolog():
-    ''' fremor -v -l TEST_FOO_LOG.log yaml --help '''
-    if Path("TEST_FOO_LOG.log").exists():
-        Path("TEST_FOO_LOG.log").unlink()
-    assert not Path("TEST_FOO_LOG.log").exists()
-
-    result = runner.invoke(fremor, args=["-v", "-l", "TEST_FOO_LOG.log", "yaml", "--help"])
+    result = runner.invoke(fremor, args=["-v", "-l", str(log_file), "yaml", "--help"])
     assert result.exit_code == 0
-    assert Path("TEST_FOO_LOG.log").exists()
+    assert log_file.exists()
 
-    log_text_line_1='[ INFO:                  cli.py:                  fremor] fre_file_handler added to base_fre_logger\n' # pylint: disable=line-too-long
-    with open( "TEST_FOO_LOG.log", 'r', encoding='utf-8') as log_text:
-        line_list=log_text.readlines()
-        assert log_text_line_1 in line_list[0]
+    line_list = log_file.read_text(encoding='utf-8').splitlines(keepends=True)
+    assert LOG_INFO_LINE in line_list[0]
 
-    Path("TEST_FOO_LOG.log").unlink()
+def test_cli_fremor_help_and_quietlog(tmp_path):
+    ''' fremor -q -l LOG yaml --help '''
+    log_file = tmp_path / 'TEST_FOO_LOG.log'
 
-def test_cli_fremor_help_and_quietlog():
-    ''' fremor -q -l TEST_FOO_LOG.log yaml --help '''
-    if Path("TEST_FOO_LOG.log").exists():
-        Path("TEST_FOO_LOG.log").unlink()
-    assert not Path("TEST_FOO_LOG.log").exists()
-
-    result = runner.invoke(fremor, args=["-q", "-l", "TEST_FOO_LOG.log", "yaml", "--help"])
+    result = runner.invoke(fremor, args=["-q", "-l", str(log_file), "yaml", "--help"])
     assert result.exit_code == 0
-    assert Path("TEST_FOO_LOG.log").exists()
+    assert log_file.exists()
 
-    with open( "TEST_FOO_LOG.log", 'r', encoding='utf-8') as log_text:
-        line_list=log_text.readlines()
-        assert line_list == []
-
-    Path("TEST_FOO_LOG.log").unlink()
+    line_list = log_file.read_text(encoding='utf-8').splitlines(keepends=True)
+    assert line_list == []
 
 def test_cli_fremor_opt_dne():
     ''' fremor optionDNE '''
