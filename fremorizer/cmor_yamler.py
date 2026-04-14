@@ -91,8 +91,8 @@ def cmor_yaml_subtool( yamlfile: str = None,
     # ---------------------------------------------------
     # parsing the target model yaml ---------------------
     # ---------------------------------------------------
-    # Use native YAML consolidation by default, with optional fre-cli fallback
-    # for advanced features (multi-file consolidation, platform/target overrides)
+    # Use native YAML loader by default, with optional fre-cli fallback
+    # for backward compatibility with legacy workflows
     if consolidate_yamls is not None:
         fre_logger.info('using fre-cli consolidate_yamls for YAML processing')
         cmor_yaml_dict = consolidate_yamls(yamlfile=yamlfile,
