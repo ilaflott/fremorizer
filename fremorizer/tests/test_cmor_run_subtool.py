@@ -68,6 +68,7 @@ def test_setup_fre_cmor_run_subtool(capfd):
     ncgen_input = f"{ROOTDIR}/reduced_ascii_files/{FILENAME}.cdl"
     ncgen_output = f"{ROOTDIR}/ocean_sos_var_file/{FILENAME}.nc"
 
+    Path(ncgen_output).parent.mkdir(parents=True, exist_ok=True)
     if Path(ncgen_output).exists():
         Path(ncgen_output).unlink()
     assert Path(ncgen_input).exists()
