@@ -1,8 +1,7 @@
-name: docs
+name: readthedocs
 
 on:
   pull_request:
-    branches:
 
 # cancel running jobs if theres a newer push
 concurrency:
@@ -13,8 +12,9 @@ permissions:
   contents: read
 
 jobs:
-  docs:
+  readthedocs:
     runs-on: ubuntu-latest
+    name: readthedocs
     defaults:
       run:
         shell: bash -l {0}
@@ -29,7 +29,7 @@ jobs:
 
       - name: Install doc dependencies
         run: |
-          pip install sphinx renku-sphinx-theme sphinx-rtd-theme click pyyaml rstcheck
+          pip install sphinx renku-sphinx-theme sphinx-rtd-theme click pyyaml jsonschema rstcheck
 
       - name: Install fremorizer
         run: |
