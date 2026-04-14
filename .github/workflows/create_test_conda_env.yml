@@ -1,5 +1,8 @@
 name: create_test_conda_env
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
 
