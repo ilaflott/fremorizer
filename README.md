@@ -17,6 +17,7 @@
 |----------|------------|-------------|------------|
 | **create_test_conda_env** | [![3.9](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.9) | [![3.10](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.10) | [![3.11](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.11) |
 
+[![wcrp_compliance_check](https://github.com/ilaflott/fremorizer/actions/workflows/wcrp_compliance_check.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/wcrp_compliance_check.yml)
 
 Model output rewriter (CMORizer) for FRE/FMS based models.
 
@@ -112,6 +113,25 @@ pytest fremorizer/tests/ -v
 # Run linter
 pylint --rcfile pylintrc fremorizer/
 ```
+
+## Quality Assurance
+
+### WCRP Compliance Checking
+
+The `wcrp_compliance_check` workflow validates CMORized NetCDF outputs against WCRP project
+specifications using [cc-plugin-wcrp](https://github.com/ESGF/cc-plugin-wcrp), a plugin for
+the [IOOS compliance-checker](https://github.com/ioos/compliance-checker). This pipeline:
+
+- Runs automatically on pull requests and via manual dispatch
+- Executes unit tests to generate CMORized output files
+- Gathers and categorizes outputs by CMIP version (CMIP6, CMIP7)
+- Validates outputs using the `wcrp_cmip6` compliance checker
+- Uploads compliance reports as workflow artifacts (retained for 30 days)
+
+To view compliance results from a workflow run:
+1. Navigate to the Actions tab in GitHub
+2. Select the `wcrp_compliance_check` workflow run
+3. Download the `wcrp-compliance-reports` artifact
 
 ## Relationship to fre-cli
 

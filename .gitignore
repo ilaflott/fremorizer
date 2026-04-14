@@ -155,6 +155,9 @@ cython_debug/
 *.nc
 tmp/
 
+# QA results
+wcrp_compliance_reports/
+
 # autogen'd by doc build
 docs/fremorizer.*
 docs/modules.rst

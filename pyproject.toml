@@ -61,6 +61,10 @@ test = [
     "pytest",
 ]
 
+qa = [
+    "cc-plugin-wcrp",
+]
+
 
 [tool.rstcheck]
 report_level = "WARNING"
