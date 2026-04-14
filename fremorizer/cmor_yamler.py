@@ -146,7 +146,7 @@ def cmor_yaml_subtool( yamlfile: str = None,
             start = yaml_start
         except KeyError:
             fre_logger.warning(
-                'no start year for fre.cmor given anywhere, will start with earliest datetime found in filenames!')
+                'no start year for fremor given anywhere, will start with earliest datetime found in filenames!')
 
     if stop is None:
         try:
@@ -154,14 +154,14 @@ def cmor_yaml_subtool( yamlfile: str = None,
             stop = yaml_stop
         except KeyError:
             fre_logger.warning(
-                'no stop year for fre.cmor given anywhere, will end with latest datetime found in filenames!')
+                'no stop year for fremor given anywhere, will end with latest datetime found in filenames!')
     if calendar_type is None:
         try:
             yaml_calendar_type = cmor_yaml_dict['calendar_type']
             calendar_type = yaml_calendar_type
         except KeyError:
             fre_logger.warning(
-                'no calendar_type for fre.cmor given anywhere, will use what is in %s', json_exp_config)
+                'no calendar_type for fremor given anywhere, will use what is in %s', json_exp_config)
 
     # ---------------------------------------------------
     # showtime ------------------------------------------
