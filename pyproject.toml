@@ -24,7 +24,6 @@ dependencies = [
         'cftime',
         'click',
         'cmor',
-        'jsonschema',
         'netCDF4',
         'numpy',
         'pyyaml',
