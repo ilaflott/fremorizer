@@ -5,6 +5,8 @@
 
 # fremorizer
 
+[![build_conda](https://github.com/ilaflott/fremorizer/actions/workflows/build_conda.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/build_conda.yml)
+[![create_test_conda_env](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml)
 [![publish_conda](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml)
 
 [![pylint](https://github.com/ilaflott/fremorizer/actions/workflows/pylint.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/pylint.yml)
@@ -17,6 +19,7 @@
 |----------|------------|-------------|------------|
 | **create_test_conda_env** | [![3.9](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.9) | [![3.10](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.10) | [![3.11](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.11) |
 
+[![compliance_check](https://github.com/ilaflott/fremorizer/actions/workflows/compliance_check.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/compliance_check.yml)
 
 Model output rewriter (CMORizer) for FRE/FMS based models.
 
