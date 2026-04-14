@@ -25,10 +25,16 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           auto-activate-base: true
+          miniforge-version: latest
           channels: conda-forge,noaa-gfdl
 
       - name: Configure Conda
         run: |
+          echo "removing main and r channels from defaults"
+          conda config --remove channels defaults || true
+          conda config --remove channels main || true
+          conda config --remove channels r || true
+
           echo "setting strict channel priority"
           conda config --set channel_priority strict
 
