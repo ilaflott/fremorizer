@@ -28,7 +28,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: fremorizer-wcrp
-          python-version: "3.12"
+          environment-file: environment.yaml
           auto-activate-base: false
           miniforge-version: latest
           channels: conda-forge,noaa-gfdl
@@ -46,17 +46,6 @@ jobs:
           echo "printing conda config just in case"
           conda config --show
 
-      - name: Install dependencies for fremorizer
-        run: |
-          conda install -y \
-            conda-forge::cftime \
-            "conda-forge::click>=8.2" \
-            "conda-forge::cmor>=3.14" \
-            "conda-forge::netcdf4>=1.7" \
-            "conda-forge::numpy>=2" \
-            conda-forge::pyyaml \
-            conda-forge::pytest
-
       - name: Install fremorizer
         run: |
           pip install .
@@ -69,18 +58,20 @@ jobs:
           echo "Using --basetemp=tmp/pytest_basetemp to preserve pytest temp artifacts"
           echo ""
 
-          echo "=========================================="
-          echo "Running CMIP6 basic tests..."
-          echo "=========================================="
-          pytest fremorizer/tests/test_cmor_run_subtool.py -v \
-            --basetemp=tmp/pytest_basetemp || true
+          # Create basetemp parent directory
+          mkdir -p tmp
 
-          echo ""
+          # Run ALL output-generating tests in a single pytest invocation
+          # so that --basetemp is only wiped once and all outputs are preserved.
           echo "=========================================="
-          echo "Running extended test examples..."
+          echo "Running all output-generating tests..."
           echo "=========================================="
-          pytest fremorizer/tests/test_cmor_run_subtool_further_examples.py -v \
-            --basetemp=tmp/pytest_basetemp || true
+          pytest \
+            fremorizer/tests/test_cmor_run_subtool.py \
+            fremorizer/tests/test_cmor_run_subtool_further_examples.py \
+            fremorizer/tests/test_cmor_yamler_subtool.py::test_cmor_yaml_subtool_dry_run_false \
+            fremorizer/tests/test_cli.py \
+            -v --basetemp=tmp/pytest_basetemp || true
 
           echo ""
           echo "Test execution complete."
@@ -89,7 +80,7 @@ jobs:
       - name: Gather test outputs into centralized directory
         id: gather_outputs
         run: |
-          bash .github/scripts/gather_test_outputs.sh tmp/qa_test_outputs
+          bash .github/scripts/gather_test_outputs.sh tmp/qa_test_outputs tmp/pytest_basetemp
 
           echo "output_dir=tmp/qa_test_outputs" >> $GITHUB_OUTPUT
 
@@ -98,14 +89,12 @@ jobs:
 
           cmip6_files=$(find tmp/qa_test_outputs/cmip6 -name "*.nc" -type f 2>/dev/null | wc -l || echo "0")
           cmip7_files=$(find tmp/qa_test_outputs/cmip7 -name "*.nc" -type f 2>/dev/null | wc -l || echo "0")
-          other_files=$(find tmp/qa_test_outputs/other -name "*.nc" -type f 2>/dev/null | wc -l || echo "0")
 
           echo "cmip6_count=${cmip6_files}" >> $GITHUB_OUTPUT
           echo "cmip7_count=${cmip7_files}" >> $GITHUB_OUTPUT
-          echo "other_count=${other_files}" >> $GITHUB_OUTPUT
 
           echo ""
-          echo "Summary: total=${total_files} cmip6=${cmip6_files} cmip7=${cmip7_files} other=${other_files}"
+          echo "Summary: total=${total_files} cmip6=${cmip6_files} cmip7=${cmip7_files}"
 
       - name: Verify outputs were gathered
         if: steps.gather_outputs.outputs.file_count == '0'
@@ -233,7 +222,6 @@ jobs:
           echo "- **Total:** ${{ steps.gather_outputs.outputs.file_count }} files" >> tmp/wcrp_compliance_reports/SUMMARY.md
           echo "- **CMIP6:** ${{ steps.gather_outputs.outputs.cmip6_count }} files" >> tmp/wcrp_compliance_reports/SUMMARY.md
           echo "- **CMIP7:** ${{ steps.gather_outputs.outputs.cmip7_count }} files" >> tmp/wcrp_compliance_reports/SUMMARY.md
-          echo "- **Other:** ${{ steps.gather_outputs.outputs.other_count }} files" >> tmp/wcrp_compliance_reports/SUMMARY.md
           echo "" >> tmp/wcrp_compliance_reports/SUMMARY.md
 
           cp tmp/qa_test_outputs/manifest.txt tmp/wcrp_compliance_reports/manifest.txt || true
