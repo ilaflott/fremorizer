@@ -1,6 +1,5 @@
 # fremorizer
 
-[![build_conda](https://github.com/ilaflott/fremorizer/actions/workflows/build_conda.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/build_conda.yml)
 [![create_test_conda_env](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml)
 [![publish_conda](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml)
 [![pylint](https://github.com/ilaflott/fremorizer/actions/workflows/pylint.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/pylint.yml)
