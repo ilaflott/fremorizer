@@ -1,0 +1,161 @@
+name: compliance_check
+
+on:
+  pull_request:
+    branches:
+  workflow_dispatch:
+
+# cancel running jobs if theres a newer push
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  compliance-checker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Checkout Files
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: fremorizer-compliance
+          python-version: "3.12"
+          auto-activate-base: false
+          miniforge-version: latest
+          channels: conda-forge,noaa-gfdl
+
+      - name: Configure Conda
+        run: |
+          echo "removing main and r channels from defaults"
+          conda config --remove channels defaults || true
+          conda config --remove channels main || true
+          conda config --remove channels r || true
+
+          echo "setting strict channel priority"
+          conda config --set channel_priority strict
+
+          echo "printing conda config just in case"
+          conda config --show
+
+      - name: Install dependencies for fremorizer
+        run: |
+          conda install -y \
+            conda-forge::cftime \
+            "conda-forge::click>=8.2" \
+            "conda-forge::cmor>=3.14" \
+            "conda-forge::netcdf4>=1.7" \
+            "conda-forge::numpy>=2" \
+            conda-forge::pyyaml \
+            conda-forge::pytest
+
+      - name: Install compliance-checker
+        run: |
+          conda install -y conda-forge::compliance-checker
+
+      - name: Install fremorizer
+        run: |
+          pip install .
+
+      - name: Run tests to generate output files
+        run: |
+          pytest fremorizer/tests/test_cmor_run_subtool.py -v
+        continue-on-error: true
+
+      - name: Find generated NetCDF files
+        id: find_files
+        run: |
+          echo "Searching for generated NetCDF files..."
+          find fremorizer/tests/test_files/outdir -name "*.nc" -type f > /tmp/netcdf_files.txt || true
+          if [ -s /tmp/netcdf_files.txt ]; then
+            echo "Found NetCDF files:"
+            cat /tmp/netcdf_files.txt
+            echo "file_count=$(wc -l < /tmp/netcdf_files.txt)" >> $GITHUB_OUTPUT
+          else
+            echo "No NetCDF files found"
+            echo "file_count=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run compliance-checker on outputs
+        if: steps.find_files.outputs.file_count != '0'
+        run: |
+          echo "Running IOOS Compliance Checker on generated NetCDF files..."
+          mkdir -p /tmp/compliance_reports
+
+          while IFS= read -r ncfile; do
+            if [ -f "$ncfile" ]; then
+              basename=$(basename "$ncfile" .nc)
+              echo ""
+              echo "=========================================="
+              echo "Checking: $ncfile"
+              echo "=========================================="
+
+              # Run compliance checker with CF conventions
+              # Generate text report (for viewing in logs)
+              compliance-checker \
+                --test=cf \
+                --criteria=normal \
+                --verbose \
+                --format=text \
+                --output=/tmp/compliance_reports/${basename}_report.txt \
+                "$ncfile" || true
+
+              # Also generate HTML report (for artifact download)
+              compliance-checker \
+                --test=cf \
+                --criteria=normal \
+                --format=html \
+                --output=/tmp/compliance_reports/${basename}_report.html \
+                "$ncfile" 2>&1 || true
+
+              # Display the text report
+              cat /tmp/compliance_reports/${basename}_report.txt || true
+
+              echo ""
+            fi
+          done < /tmp/netcdf_files.txt
+
+          echo ""
+          echo "=========================================="
+          echo "Compliance checking complete"
+          echo "=========================================="
+
+      - name: Generate summary report
+        if: steps.find_files.outputs.file_count != '0'
+        run: |
+          echo "# IOOS Compliance Checker Results" > /tmp/compliance_reports/SUMMARY.md
+          echo "" >> /tmp/compliance_reports/SUMMARY.md
+          echo "Checked ${{ steps.find_files.outputs.file_count }} NetCDF files" >> /tmp/compliance_reports/SUMMARY.md
+          echo "" >> /tmp/compliance_reports/SUMMARY.md
+          echo "## Files Checked" >> /tmp/compliance_reports/SUMMARY.md
+          echo "" >> /tmp/compliance_reports/SUMMARY.md
+          while IFS= read -r ncfile; do
+            echo "- \`$ncfile\`" >> /tmp/compliance_reports/SUMMARY.md
+          done < /tmp/netcdf_files.txt
+          echo "" >> /tmp/compliance_reports/SUMMARY.md
+          echo "See individual report files for detailed results." >> /tmp/compliance_reports/SUMMARY.md
+
+          cat /tmp/compliance_reports/SUMMARY.md
+
+      - name: Upload compliance reports
+        if: always() && steps.find_files.outputs.file_count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-checker-reports
+          path: /tmp/compliance_reports/
+          retention-days: 30
+
+      - name: Check if any files were tested
+        if: steps.find_files.outputs.file_count == '0'
+        run: |
+          echo "::warning::No NetCDF files were found to check for compliance"
+          echo "This may indicate that tests did not run successfully or outputs were not generated"
