@@ -58,6 +58,64 @@ from .cmor_constants import ( ARCHIVE_GOLD_DATA_DIR, CMIP7_GOLD_OCEAN_FILE_STUB,
 
 fre_logger = logging.getLogger(__name__)
 
+# CF calendar aliases mapped to their canonical equivalents
+CF_CALENDAR_ALIASES = {
+    "noleap": "365_day",
+    "all_leap": "366_day",
+    "standard": "gregorian",
+}
+
+
+def normalize_calendar(calendar: Optional[str]) -> Optional[str]:
+    """
+    Normalize a calendar string to its canonical CF name, resolving common aliases.
+
+    :param calendar: Calendar string (e.g., 'noleap', '365_day', 'standard').
+    :type calendar: str, optional
+    :return: Canonical calendar string or None if input is None.
+    :rtype: str or None
+    """
+    if calendar is None:
+        return None
+    calendar_lc = str(calendar).lower()
+    return CF_CALENDAR_ALIASES.get(calendar_lc, calendar_lc)
+
+def calendars_are_equivalent(cal1: Optional[str], cal2: Optional[str]) -> bool:
+    """
+    Return True if two CF calendar names refer to the same calendar, accounting for aliases.
+
+    :param cal1: First CF calendar name (case-insensitive).
+    :type cal1: str, optional
+    :param cal2: Second CF calendar name (case-insensitive).
+    :type cal2: str, optional
+    :return: True if both names refer to the same calendar, False otherwise.
+    :rtype: bool
+    """
+    return normalize_calendar(cal1) == normalize_calendar(cal2)
+
+def get_time_calendar_value(time_var) -> Optional[str]:
+    """
+    Read a time variable's calendar/calendar_type attribute and normalize aliases.
+
+    :param time_var: netCDF-like time variable with optional calendar attributes.
+    :type time_var: Any
+    :return: Normalized calendar string or None if not present.
+    :rtype: str or None
+    """
+    calendar_val = None
+    try:
+        calendar_val = str(time_var.calendar).lower()
+    except Exception:
+        fre_logger.debug("could not find calendar attribute on time axis. moving on.")
+
+    if calendar_val is None:
+        try:
+            calendar_val = str(time_var.calendar_type).lower()
+        except Exception:
+            fre_logger.debug("could not find calendar_type attribute on time axis. moving on.")
+
+    return normalize_calendar(calendar_val)
+
 
 def print_data_minmax( ds_variable: Optional[np.ma.core.MaskedArray] = None,
                        desc: Optional[str] = None) -> None:
@@ -528,6 +586,7 @@ def update_calendar_type( json_file_path: str,
     :rtype: None
 
     .. note:: The function logs before and after values, and overwrites the input file unless an output path is given.
+              CF calendar aliases (e.g., "noleap") are normalized to their canonical CF names (e.g., "365_day").
     """
     if new_calendar_type is None:
         fre_logger.error(
@@ -535,13 +594,18 @@ def update_calendar_type( json_file_path: str,
             'bailing...!')
         raise ValueError
 
+    normalized_calendar_type = normalize_calendar(new_calendar_type)
+
     try:
         with open(json_file_path, "r", encoding="utf-8") as file:
             data = json.load(file)
 
         try:
             fre_logger.info('Original "calendar": %s', data["calendar"])
-            data["calendar"] = new_calendar_type
+            if normalized_calendar_type != str(new_calendar_type).lower():
+                fre_logger.info('Normalizing calendar alias "%s" to "%s"',
+                                new_calendar_type, normalized_calendar_type)
+            data["calendar"] = normalized_calendar_type
             fre_logger.info('Updated "calendar": %s', data["calendar"])
         except KeyError as e:
             fre_logger.error("Failed to update 'calendar': %s", e)

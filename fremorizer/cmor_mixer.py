@@ -45,7 +45,8 @@ import netCDF4 as nc
 from .cmor_helpers import ( print_data_minmax, from_dis_gimme_dis, find_statics_file, create_lev_bnds,
                             get_iso_datetime_ranges, check_dataset_for_ocean_grid, get_vertical_dimension,
                             create_tmp_dir, get_json_file_data, update_grid_and_label, #update_outpath,
-                            update_calendar_type, find_gold_ocean_statics_file, filter_brands )
+                            update_calendar_type, find_gold_ocean_statics_file, filter_brands,
+                            normalize_calendar, get_time_calendar_value, calendars_are_equivalent )
 from .cmor_constants import ( ACCEPTED_VERT_DIMS, NON_HYBRID_SIGMA_COORDS, ALT_HYBRID_SIGMA_COORDS,
                               DEPTH_COORDS, CMOR_NC_FILE_ACTION, CMOR_VERBOSITY,
                               CMOR_EXIT_CTL, CMOR_MK_SUBDIRS, CMOR_LOG )
@@ -187,17 +188,11 @@ def rewrite_netcdf_file_var( mip_var_cfgs: dict = None,
     fre_logger.info("    time_coord_units = %s", time_coord_units)
 
     # check the calendar of the input netcdf file time coordinate, if present
-    time_coords_calendar=None
-    try: # first attempt
-        time_coords_calendar = ds['time'].calendar.lower()
-    except:
-        fre_logger.debug("could not find calendar attribute on time axis. moving on.")
-
-    if time_coords_calendar is None:
-        try: # second attempt if first didn't work
-            time_coords_calendar=ds['time'].calendar_type.lower()
-        except:
-            fre_logger.debug("could not find calendar_type attribute on time axis. moving on.")
+    time_coords_calendar = None
+    try:
+        time_coords_calendar = get_time_calendar_value(ds['time'])
+    except Exception:
+        fre_logger.debug("could not read time variable for calendar detection.")
 
     # if it's still None, give a warning and move on.
     if time_coords_calendar is None:
@@ -206,9 +201,11 @@ def rewrite_netcdf_file_var( mip_var_cfgs: dict = None,
     else:
         with open(json_exp_config, "r", encoding="utf-8") as file:
             exp_cfg_calendar = json.load(file)['calendar']
-            if exp_cfg_calendar != time_coords_calendar:
-                raise ValueError(f"data calendar type {time_coords_calendar} "
-                                 f"does not match input config calendar type: {exp_cfg_calendar}")
+            if not calendars_are_equivalent(time_coords_calendar, exp_cfg_calendar):
+                norm_time = normalize_calendar(time_coords_calendar)
+                norm_cfg = normalize_calendar(exp_cfg_calendar)
+                raise ValueError(f"data calendar type {norm_time} "
+                                 f"does not match input config calendar type: {norm_cfg}")
 
     # read in time_bnds, if present
     fre_logger.info('attempting to read coordinate BNDS, time_bnds')
