@@ -13,7 +13,7 @@
 set -e
 
 # Default output directory if not specified
-OUTPUT_DIR="${1:-/tmp/qa_test_outputs}"
+OUTPUT_DIR="${1:-tmp/qa_test_outputs}"
 
 echo "=========================================="
 echo "Gathering Test Outputs for QA Validation"

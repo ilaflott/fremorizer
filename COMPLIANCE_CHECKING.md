@@ -78,7 +78,7 @@ The test output gathering script (`.github/scripts/gather_test_outputs.sh`) is d
 The script can be called from any workflow or local environment:
 
 ```bash
-# Basic usage - outputs to /tmp/qa_test_outputs
+# Basic usage - outputs to tmp/qa_test_outputs
 bash .github/scripts/gather_test_outputs.sh
 
 # Custom output directory
@@ -88,7 +88,7 @@ bash .github/scripts/gather_test_outputs.sh /path/to/output/dir
 ### Script Output Structure
 
 ```
-/tmp/qa_test_outputs/
+tmp/qa_test_outputs/
 ├── cmip6/              # CMIP6 files (auto-detected)
 │   ├── <hash>_file1.nc
 │   └── <hash>_file2.nc
@@ -113,17 +113,17 @@ Create a workflow that uses the same gathered outputs:
   continue-on-error: true
 
 - name: Gather test outputs
-  run: bash .github/scripts/gather_test_outputs.sh /tmp/qa_test_outputs
+  run: bash .github/scripts/gather_test_outputs.sh tmp/qa_test_outputs
 
 - name: Run ESGF-QA checks
   run: |
     # Check CMIP6 files
-    for ncfile in /tmp/qa_test_outputs/cmip6/*.nc; do
+    for ncfile in tmp/qa_test_outputs/cmip6/*.nc; do
       esgf-qa --project CMIP6 "$ncfile"
     done
 
     # Check CMIP7 files
-    for ncfile in /tmp/qa_test_outputs/cmip7/*.nc; do
+    for ncfile in tmp/qa_test_outputs/cmip7/*.nc; do
       esgf-qa --project CMIP7 "$ncfile"
     done
 ```
@@ -132,15 +132,15 @@ Create a workflow that uses the same gathered outputs:
 
 ```bash
 # Use the gathered outputs with any validation tool
-bash .github/scripts/gather_test_outputs.sh /tmp/qa_test_outputs
+bash .github/scripts/gather_test_outputs.sh tmp/qa_test_outputs
 
 # Validate all CMIP7 files
-find /tmp/qa_test_outputs/cmip7 -name "*.nc" | while read ncfile; do
+find tmp/qa_test_outputs/cmip7 -name "*.nc" | while read ncfile; do
   your-custom-validator "$ncfile"
 done
 
 # Or validate all files regardless of category
-find /tmp/qa_test_outputs -name "*.nc" -type f | while read ncfile; do
+find tmp/qa_test_outputs -name "*.nc" -type f | while read ncfile; do
   your-custom-validator "$ncfile"
 done
 ```
