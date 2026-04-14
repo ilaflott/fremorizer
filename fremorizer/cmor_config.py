@@ -2,8 +2,8 @@
 CMOR YAML Configuration Generator
 =================================
 
-This module powers the ``fre cmor config`` command, generating a CMOR YAML configuration
-file that ``fre cmor yaml`` can consume. It scans a post-processing directory tree for
+This module powers the ``fremor config`` command, generating a CMOR YAML configuration
+file that ``fremor yaml`` can consume. It scans a post-processing directory tree for
 available components and time-series data, cross-references found variables against MIP
 tables, and produces the structured YAML needed for CMORization.
 
@@ -70,7 +70,7 @@ def cmor_config_subtool(
 
     Scans ``pp_dir`` for pp-component directories, cross-references found variables
     against MIP tables, writes per-component variable lists, and emits a structured
-    YAML that ``fre cmor yaml`` can later consume.
+    YAML that ``fremor yaml`` can later consume.
 
     :param pp_dir: Root post-processing directory containing per-component subdirectories.
     :type pp_dir: str
