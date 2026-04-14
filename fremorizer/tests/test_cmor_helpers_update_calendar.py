@@ -141,6 +141,12 @@ def test_normalize_calendar_aliases_and_passthrough():
     assert normalize_calendar("julian") == "julian"
     assert normalize_calendar("CustomCalendar") == "customcalendar"
     assert normalize_calendar(None) is None
+    assert calendars_are_equivalent("noleap", "365_day") is True
+    assert calendars_are_equivalent("standard", "gregorian") is True
+    assert calendars_are_equivalent("all_leap", "366_day") is True
+    assert calendars_are_equivalent("julian", "julian") is True
+    assert calendars_are_equivalent("unknown", "unknown") is True
+    assert calendars_are_equivalent("unknown", "gregorian") is False
 
 
 class _FakeTime:

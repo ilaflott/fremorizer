@@ -200,11 +200,12 @@ def rewrite_netcdf_file_var( mip_var_cfgs: dict = None,
                            "this output could have the wrong calendar!")
     else:
         with open(json_exp_config, "r", encoding="utf-8") as file:
-            exp_cfg_calendar = normalize_calendar(json.load(file)['calendar'])
-            normalized_time_calendar = normalize_calendar(time_coords_calendar)
-            if normalized_time_calendar != exp_cfg_calendar:
-                raise ValueError(f"data calendar type {normalized_time_calendar} "
-                                 f"does not match input config calendar type: {exp_cfg_calendar}")
+            exp_cfg_calendar = json.load(file)['calendar']
+            if not calendars_are_equivalent(time_coords_calendar, exp_cfg_calendar):
+                norm_time = normalize_calendar(time_coords_calendar)
+                norm_cfg = normalize_calendar(exp_cfg_calendar)
+                raise ValueError(f"data calendar type {norm_time} "
+                                 f"does not match input config calendar type: {norm_cfg}")
 
     # read in time_bnds, if present
     fre_logger.info('attempting to read coordinate BNDS, time_bnds')

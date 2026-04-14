@@ -80,6 +80,19 @@ def normalize_calendar(calendar: Optional[str]) -> Optional[str]:
     calendar_lc = str(calendar).lower()
     return CF_CALENDAR_ALIASES.get(calendar_lc, calendar_lc)
 
+def calendars_are_equivalent(cal1: Optional[str], cal2: Optional[str]) -> bool:
+    """
+    Return True if two CF calendar names refer to the same calendar, accounting for aliases.
+
+    :param cal1: First CF calendar name (case-insensitive).
+    :type cal1: str, optional
+    :param cal2: Second CF calendar name (case-insensitive).
+    :type cal2: str, optional
+    :return: True if both names refer to the same calendar, False otherwise.
+    :rtype: bool
+    """
+    return normalize_calendar(cal1) == normalize_calendar(cal2)
+
 def get_time_calendar_value(time_var) -> Optional[str]:
     """
     Read a time variable's calendar/calendar_type attribute and normalize aliases.
