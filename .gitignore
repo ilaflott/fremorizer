@@ -155,6 +155,9 @@ cython_debug/
 *.nc
 tmp/
 
+# QA results
+esgf_qa_results/
+
 # autogen'd by doc build
 docs/fremorizer.*
 docs/modules.rst
