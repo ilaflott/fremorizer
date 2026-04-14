@@ -68,61 +68,120 @@ jobs:
 
       - name: Run tests to generate output files
         run: |
-          pytest fremorizer/tests/test_cmor_run_subtool.py -v
+          echo "Running comprehensive test suite to generate NetCDF outputs..."
+          echo ""
+
+          # Run CMIP6 basic tests
+          echo "=========================================="
+          echo "Running CMIP6 basic tests..."
+          echo "=========================================="
+          pytest fremorizer/tests/test_cmor_run_subtool.py -v || true
+
+          echo ""
+          echo "=========================================="
+          echo "Running extended test examples (includes CMIP7)..."
+          echo "=========================================="
+          # Run extended tests which include CMIP7 examples
+          # Note: Some tests may fail due to missing ncgen3 or other dependencies
+          # We use continue-on-error to ensure we gather whatever outputs were generated
+          pytest fremorizer/tests/test_cmor_run_subtool_further_examples.py -v || true
+
+          echo ""
+          echo "Test execution complete. Proceeding to gather outputs..."
         continue-on-error: true
 
-      - name: Find generated NetCDF files
-        id: find_files
+      - name: Gather test outputs into centralized directory
+        id: gather_outputs
         run: |
-          echo "Searching for generated NetCDF files..."
-          find fremorizer/tests/test_files/outdir -name "*.nc" -type f > /tmp/netcdf_files.txt || true
-          if [ -s /tmp/netcdf_files.txt ]; then
-            echo "Found NetCDF files:"
-            cat /tmp/netcdf_files.txt
-            echo "file_count=$(wc -l < /tmp/netcdf_files.txt)" >> $GITHUB_OUTPUT
-          else
-            echo "No NetCDF files found"
-            echo "file_count=0" >> $GITHUB_OUTPUT
-          fi
+          # Use the reusable script to gather all test outputs
+          # This script categorizes files by CMIP version and creates a manifest
+          bash .github/scripts/gather_test_outputs.sh /tmp/qa_test_outputs
+
+          # Store the output directory path for subsequent steps
+          echo "output_dir=/tmp/qa_test_outputs" >> $GITHUB_OUTPUT
+
+          # Count total files gathered
+          total_files=$(find /tmp/qa_test_outputs -name "*.nc" -type f | wc -l)
+          echo "file_count=${total_files}" >> $GITHUB_OUTPUT
+
+          # Count by category
+          cmip6_files=$(find /tmp/qa_test_outputs/cmip6 -name "*.nc" -type f 2>/dev/null | wc -l || echo "0")
+          cmip7_files=$(find /tmp/qa_test_outputs/cmip7 -name "*.nc" -type f 2>/dev/null | wc -l || echo "0")
+          other_files=$(find /tmp/qa_test_outputs/other -name "*.nc" -type f 2>/dev/null | wc -l || echo "0")
+
+          echo "cmip6_count=${cmip6_files}" >> $GITHUB_OUTPUT
+          echo "cmip7_count=${cmip7_files}" >> $GITHUB_OUTPUT
+          echo "other_count=${other_files}" >> $GITHUB_OUTPUT
+
+          echo ""
+          echo "Gathered outputs summary:"
+          echo "  Total: ${total_files}"
+          echo "  CMIP6: ${cmip6_files}"
+          echo "  CMIP7: ${cmip7_files}"
+          echo "  Other: ${other_files}"
 
       - name: Run compliance-checker on outputs
-        if: steps.find_files.outputs.file_count != '0'
+        if: steps.gather_outputs.outputs.file_count != '0'
         run: |
-          echo "Running IOOS Compliance Checker on generated NetCDF files..."
+          echo "Running IOOS Compliance Checker on gathered NetCDF files..."
+          echo "Total files to check: ${{ steps.gather_outputs.outputs.file_count }}"
+          echo "  CMIP6: ${{ steps.gather_outputs.outputs.cmip6_count }}"
+          echo "  CMIP7: ${{ steps.gather_outputs.outputs.cmip7_count }}"
+          echo "  Other: ${{ steps.gather_outputs.outputs.other_count }}"
+          echo ""
+
           mkdir -p /tmp/compliance_reports
 
-          while IFS= read -r ncfile; do
-            if [ -f "$ncfile" ]; then
-              basename=$(basename "$ncfile" .nc)
-              echo ""
-              echo "=========================================="
-              echo "Checking: $ncfile"
-              echo "=========================================="
+          # Function to check files in a category
+          check_category() {
+            local category=$1
+            local category_dir="/tmp/qa_test_outputs/${category}"
 
-              # Run compliance checker with CF conventions
-              # Generate text report (for viewing in logs)
-              compliance-checker \
-                --test=cf \
-                --criteria=normal \
-                --verbose \
-                --format=text \
-                --output=/tmp/compliance_reports/${basename}_report.txt \
-                "$ncfile" || true
-
-              # Also generate HTML report (for artifact download)
-              compliance-checker \
-                --test=cf \
-                --criteria=normal \
-                --format=html \
-                --output=/tmp/compliance_reports/${basename}_report.html \
-                "$ncfile" 2>&1 || true
-
-              # Display the text report
-              cat /tmp/compliance_reports/${basename}_report.txt || true
-
-              echo ""
+            if [ ! -d "${category_dir}" ] || [ -z "$(ls -A ${category_dir}/*.nc 2>/dev/null)" ]; then
+              echo "No files in ${category} category, skipping..."
+              return
             fi
-          done < /tmp/netcdf_files.txt
+
+            echo ""
+            echo "=========================================="
+            echo "Checking ${category} files..."
+            echo "=========================================="
+
+            for ncfile in "${category_dir}"/*.nc; do
+              if [ -f "$ncfile" ]; then
+                basename=$(basename "$ncfile" .nc)
+                echo ""
+                echo "Checking: ${basename}"
+
+                # Generate text report (for viewing in logs)
+                compliance-checker \
+                  --test=cf \
+                  --criteria=normal \
+                  --verbose \
+                  --format=text \
+                  --output=/tmp/compliance_reports/${category}_${basename}_report.txt \
+                  "$ncfile" || true
+
+                # Also generate HTML report (for artifact download)
+                compliance-checker \
+                  --test=cf \
+                  --criteria=normal \
+                  --format=html \
+                  --output=/tmp/compliance_reports/${category}_${basename}_report.html \
+                  "$ncfile" 2>&1 || true
+
+                # Display summary from text report (first 50 lines to avoid log spam)
+                echo "Summary:"
+                head -50 /tmp/compliance_reports/${category}_${basename}_report.txt || true
+                echo ""
+              fi
+            done
+          }
+
+          # Check each category
+          check_category "cmip6"
+          check_category "cmip7"
+          check_category "other"
 
           echo ""
           echo "=========================================="
@@ -130,24 +189,48 @@ jobs:
           echo "=========================================="
 
       - name: Generate summary report
-        if: steps.find_files.outputs.file_count != '0'
+        if: steps.gather_outputs.outputs.file_count != '0'
         run: |
           echo "# IOOS Compliance Checker Results" > /tmp/compliance_reports/SUMMARY.md
           echo "" >> /tmp/compliance_reports/SUMMARY.md
-          echo "Checked ${{ steps.find_files.outputs.file_count }} NetCDF files" >> /tmp/compliance_reports/SUMMARY.md
+          echo "**Generated:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /tmp/compliance_reports/SUMMARY.md
           echo "" >> /tmp/compliance_reports/SUMMARY.md
           echo "## Files Checked" >> /tmp/compliance_reports/SUMMARY.md
           echo "" >> /tmp/compliance_reports/SUMMARY.md
-          while IFS= read -r ncfile; do
-            echo "- \`$ncfile\`" >> /tmp/compliance_reports/SUMMARY.md
-          done < /tmp/netcdf_files.txt
+          echo "- **Total:** ${{ steps.gather_outputs.outputs.file_count }} files" >> /tmp/compliance_reports/SUMMARY.md
+          echo "- **CMIP6:** ${{ steps.gather_outputs.outputs.cmip6_count }} files" >> /tmp/compliance_reports/SUMMARY.md
+          echo "- **CMIP7:** ${{ steps.gather_outputs.outputs.cmip7_count }} files" >> /tmp/compliance_reports/SUMMARY.md
+          echo "- **Other:** ${{ steps.gather_outputs.outputs.other_count }} files" >> /tmp/compliance_reports/SUMMARY.md
           echo "" >> /tmp/compliance_reports/SUMMARY.md
-          echo "See individual report files for detailed results." >> /tmp/compliance_reports/SUMMARY.md
+          echo "## Report Files" >> /tmp/compliance_reports/SUMMARY.md
+          echo "" >> /tmp/compliance_reports/SUMMARY.md
+          echo "Individual compliance reports are organized by CMIP version:" >> /tmp/compliance_reports/SUMMARY.md
+          echo "" >> /tmp/compliance_reports/SUMMARY.md
+          echo "- \`cmip6_*_report.html\` - CMIP6 file reports" >> /tmp/compliance_reports/SUMMARY.md
+          echo "- \`cmip7_*_report.html\` - CMIP7 file reports" >> /tmp/compliance_reports/SUMMARY.md
+          echo "- \`other_*_report.html\` - Unclassified file reports" >> /tmp/compliance_reports/SUMMARY.md
+          echo "" >> /tmp/compliance_reports/SUMMARY.md
+          echo "## Test Output Manifest" >> /tmp/compliance_reports/SUMMARY.md
+          echo "" >> /tmp/compliance_reports/SUMMARY.md
+          echo "See \`manifest.txt\` for the complete mapping of source test files to gathered outputs." >> /tmp/compliance_reports/SUMMARY.md
+          echo "" >> /tmp/compliance_reports/SUMMARY.md
+
+          # Copy the test output summary and manifest to the reports directory
+          cp /tmp/qa_test_outputs/SUMMARY.md /tmp/compliance_reports/TEST_OUTPUTS_SUMMARY.md || true
+          cp /tmp/qa_test_outputs/manifest.txt /tmp/compliance_reports/manifest.txt || true
 
           cat /tmp/compliance_reports/SUMMARY.md
 
+      - name: Upload test outputs
+        if: always() && steps.gather_outputs.outputs.file_count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-test-outputs
+          path: /tmp/qa_test_outputs/
+          retention-days: 30
+
       - name: Upload compliance reports
-        if: always() && steps.find_files.outputs.file_count != '0'
+        if: always() && steps.gather_outputs.outputs.file_count != '0'
         uses: actions/upload-artifact@v4
         with:
           name: compliance-checker-reports
@@ -155,7 +238,7 @@ jobs:
           retention-days: 30
 
       - name: Check if any files were tested
-        if: steps.find_files.outputs.file_count == '0'
+        if: steps.gather_outputs.outputs.file_count == '0'
         run: |
           echo "::warning::No NetCDF files were found to check for compliance"
           echo "This may indicate that tests did not run successfully or outputs were not generated"
