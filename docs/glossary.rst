@@ -13,7 +13,7 @@ Glossary
 
    CMOR
       Climate Model Output Rewriter. A library maintained by `PCMDI <https://cmor.llnl.gov/>`_ that
-      rewrites climate model output into a standardised format for model intercomparison projects.
+      rewrites climate model output into a standardized format for model intercomparison projects.
 
    MIP
       Model Intercomparison Project. A coordinated effort to compare climate models (e.g. CMIP6, CMIP7).
@@ -23,7 +23,7 @@ Glossary
       frequency combination (e.g. ``CMIP6_Omon.json`` for ocean monthly variables).
 
    controlled vocabulary
-      A standardised set of allowed values for metadata fields such as ``experiment_id``,
+      A standardized set of allowed values for metadata fields such as ``experiment_id``,
       ``source_id``, ``grid_label``, and ``nominal_resolution``. Published by the CMIP community.
 
    variable list
