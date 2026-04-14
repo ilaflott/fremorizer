@@ -12,6 +12,7 @@ Welcome to ``fremorizer``'s documentation!
    commands
    cookbook
    api
+   contributing
    glossary
 
 Indices
