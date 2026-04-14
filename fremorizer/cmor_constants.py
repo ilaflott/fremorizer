@@ -1,8 +1,8 @@
 """
-fre.cmor constants
+fremorizer constants
 ==================
 
-Centralized constants for the ``fre cmor`` subpackage.  Every hard-coded
+Centralized constants for the ``fremor`` package.  Every hard-coded
 value that was previously scattered across ``cmor_mixer``, ``cmor_helpers``,
 ``cmor_config``, ``cmor_finder``, and ``cmor_yamler`` now lives here so that
 each module imports from a single, transparent location.

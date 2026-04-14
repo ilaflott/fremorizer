@@ -71,7 +71,7 @@ def cmor_yaml_subtool( yamlfile: str = None,
     :param calendar_type: CF-compliant calendar type.
     :type calendar_type: str, optional
     :param print_cli_call: When True and dry_run_mode is enabled, print
-        the equivalent ``fre cmor run`` CLI invocation; when False, print
+        the equivalent ``fremor run`` CLI invocation; when False, print
         the Python ``cmor_run_subtool(...)`` call instead.
     :type print_cli_call: bool
     :raises FileNotFoundError: If required paths do not exist.
@@ -146,7 +146,7 @@ def cmor_yaml_subtool( yamlfile: str = None,
             start = yaml_start
         except KeyError:
             fre_logger.warning(
-                'no start year for fre.cmor given anywhere, will start with earliest datetime found in filenames!')
+                'no start year for fremor given anywhere, will start with earliest datetime found in filenames!')
 
     if stop is None:
         try:
@@ -154,14 +154,14 @@ def cmor_yaml_subtool( yamlfile: str = None,
             stop = yaml_stop
         except KeyError:
             fre_logger.warning(
-                'no stop year for fre.cmor given anywhere, will end with latest datetime found in filenames!')
+                'no stop year for fremor given anywhere, will end with latest datetime found in filenames!')
     if calendar_type is None:
         try:
             yaml_calendar_type = cmor_yaml_dict['calendar_type']
             calendar_type = yaml_calendar_type
         except KeyError:
             fre_logger.warning(
-                'no calendar_type for fre.cmor given anywhere, will use what is in %s', json_exp_config)
+                'no calendar_type for fremor given anywhere, will use what is in %s', json_exp_config)
 
     # ---------------------------------------------------
     # showtime ------------------------------------------
@@ -240,7 +240,7 @@ def cmor_yaml_subtool( yamlfile: str = None,
             if dry_run_mode:
                 if print_cli_call:
                     fre_logger.info(  '--DRY RUN CLI CALL---\n'
-                                      'fre -v -v cmor run \\ \n'
+                                      'fremor run -v -v \\ \n'
                                       f'    --indir {indir} \\ \n'
                                       f'    --varlist {json_var_list} \\ \n'
                                       f'    --table_config {json_mip_table_config} \\ \n'

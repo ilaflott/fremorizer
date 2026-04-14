@@ -1,5 +1,5 @@
 """
-fre cmor find
+fremor find
 =============
 
 This module provides tools to find and print information about variables in CMIP6 JSON configuration files.
