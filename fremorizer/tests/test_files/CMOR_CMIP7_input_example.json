@@ -1,5 +1,5 @@
 {
-    "#_TESTING_ONLY": " ***** This is for unit-test functionality of NOAA-GDFL's fre.cmor submodule for CMIP7, they do not reflect values used in actual production *****",
+    "#_TESTING_ONLY": " ***** This is for unit-test functionality of NOAA-GDFL's fremorizer module for CMIP7, they do not reflect values used in actual production *****",
     "contact ": "MIP participant mipmember@foobar.c.om",
     "comment": "additional important information not fitting into other fields can be placed here",
     "#_TRACKING": "***** anything to do with citing this data, accredation, licensing, and references go here *****",
