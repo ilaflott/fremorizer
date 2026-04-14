@@ -5,7 +5,11 @@ import json
 
 import pytest
 
-from fremorizer.cmor_helpers import normalize_calendar, update_calendar_type
+from fremorizer.cmor_helpers import (
+    get_time_calendar_value,
+    normalize_calendar,
+    update_calendar_type,
+)
 
 @pytest.fixture
 def temp_json_file(tmp_path):
@@ -137,3 +141,25 @@ def test_normalize_calendar_aliases_and_passthrough():
     assert normalize_calendar("julian") == "julian"
     assert normalize_calendar("CustomCalendar") == "customcalendar"
     assert normalize_calendar(None) is None
+
+
+class _FakeTime:
+    def __init__(self, calendar=None, calendar_type=None):
+        self.calendar = calendar
+        self.calendar_type = calendar_type
+        self.units = "days since 0001-01-01"
+
+
+def test_get_time_calendar_prefers_calendar_attr():
+    fake_time = _FakeTime(calendar="NoLeap", calendar_type="julian")
+    assert get_time_calendar_value(fake_time) == "365_day"
+
+
+def test_get_time_calendar_fallback_calendar_type():
+    fake_time = _FakeTime(calendar=None, calendar_type="Standard")
+    assert get_time_calendar_value(fake_time) == "gregorian"
+
+
+def test_get_time_calendar_missing_returns_none():
+    fake_time = _FakeTime()
+    assert get_time_calendar_value(fake_time) is None

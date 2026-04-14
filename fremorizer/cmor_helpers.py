@@ -80,6 +80,29 @@ def normalize_calendar(calendar: Optional[str]) -> Optional[str]:
     calendar_lc = str(calendar).lower()
     return CF_CALENDAR_ALIASES.get(calendar_lc, calendar_lc)
 
+def get_time_calendar_value(time_var) -> Optional[str]:
+    """
+    Read a time variable's calendar/calendar_type attribute and normalize aliases.
+
+    :param time_var: netCDF-like time variable with optional calendar attributes.
+    :type time_var: Any
+    :return: Normalized calendar string or None if not present.
+    :rtype: str or None
+    """
+    calendar_val = None
+    try:
+        calendar_val = str(time_var.calendar).lower()
+    except Exception:
+        fre_logger.debug("could not find calendar attribute on time axis. moving on.")
+
+    if calendar_val is None:
+        try:
+            calendar_val = str(time_var.calendar_type).lower()
+        except Exception:
+            fre_logger.debug("could not find calendar_type attribute on time axis. moving on.")
+
+    return normalize_calendar(calendar_val)
+
 
 def print_data_minmax( ds_variable: Optional[np.ma.core.MaskedArray] = None,
                        desc: Optional[str] = None) -> None:

@@ -46,7 +46,7 @@ from .cmor_helpers import ( print_data_minmax, from_dis_gimme_dis, find_statics_
                             get_iso_datetime_ranges, check_dataset_for_ocean_grid, get_vertical_dimension,
                             create_tmp_dir, get_json_file_data, update_grid_and_label, #update_outpath,
                             update_calendar_type, find_gold_ocean_statics_file, filter_brands,
-                            normalize_calendar )
+                            normalize_calendar, get_time_calendar_value )
 from .cmor_constants import ( ACCEPTED_VERT_DIMS, NON_HYBRID_SIGMA_COORDS, ALT_HYBRID_SIGMA_COORDS,
                               DEPTH_COORDS, CMOR_NC_FILE_ACTION, CMOR_VERBOSITY,
                               CMOR_EXIT_CTL, CMOR_MK_SUBDIRS, CMOR_LOG )
@@ -188,17 +188,11 @@ def rewrite_netcdf_file_var( mip_var_cfgs: dict = None,
     fre_logger.info("    time_coord_units = %s", time_coord_units)
 
     # check the calendar of the input netcdf file time coordinate, if present
-    time_coords_calendar=None
-    try: # first attempt
-        time_coords_calendar = str(ds['time'].calendar).lower()
+    time_coords_calendar = None
+    try:
+        time_coords_calendar = get_time_calendar_value(ds['time'])
     except Exception:
-        fre_logger.debug("could not find calendar attribute on time axis. moving on.")
-
-    if time_coords_calendar is None:
-        try: # second attempt if first didn't work
-            time_coords_calendar=str(ds['time'].calendar_type).lower()
-        except Exception:
-            fre_logger.debug("could not find calendar_type attribute on time axis. moving on.")
+        fre_logger.debug("could not read time variable for calendar detection.")
 
     # if it's still None, give a warning and move on.
     if time_coords_calendar is None:
