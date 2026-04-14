@@ -190,13 +190,13 @@ def rewrite_netcdf_file_var( mip_var_cfgs: dict = None,
     # check the calendar of the input netcdf file time coordinate, if present
     time_coords_calendar=None
     try: # first attempt
-        time_coords_calendar = ds['time'].calendar
+        time_coords_calendar = str(ds['time'].calendar).lower()
     except Exception:
         fre_logger.debug("could not find calendar attribute on time axis. moving on.")
 
     if time_coords_calendar is None:
         try: # second attempt if first didn't work
-            time_coords_calendar=ds['time'].calendar_type
+            time_coords_calendar=str(ds['time'].calendar_type).lower()
         except Exception:
             fre_logger.debug("could not find calendar_type attribute on time axis. moving on.")
 

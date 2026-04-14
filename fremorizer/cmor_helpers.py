@@ -61,13 +61,8 @@ fre_logger = logging.getLogger(__name__)
 # CF calendar aliases mapped to their canonical equivalents
 CF_CALENDAR_ALIASES = {
     "noleap": "365_day",
-    "365_day": "365_day",
     "all_leap": "366_day",
-    "366_day": "366_day",
-    "gregorian": "gregorian",
     "standard": "gregorian",
-    "proleptic_gregorian": "proleptic_gregorian",
-    "julian": "julian",
 }
 
 
