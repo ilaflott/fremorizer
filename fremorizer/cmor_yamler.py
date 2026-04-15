@@ -246,7 +246,7 @@ def cmor_yaml_subtool( yamlfile: str = None,
                                           f'    --table_config {json_mip_table_config} \\ \n' + \
                                           f'    --exp_config {json_exp_config} \\ \n' + \
                                           f'    --outdir {cmor_run_call_outdir} \\ \n' + \
-                                          f'    --run_one \\ \n' + \
+                                           '    --run_one \\ \n' + \
                                           f'    --opt_var_name {opt_var_name} ,\n' + \
                                           f'    --grid_desc "{grid_desc}" \\ \n' + \
                                           f'    --grid_label {grid_label} \\ \n' + \

@@ -276,7 +276,7 @@ def find_statics_file( bronx_file_path: str) -> Optional[str]:
     statics_path = '/'.join(bronx_file_path_elem)
     fre_logger.debug('going to glob the following path for a statics file: \n%s\n', statics_path)
     fre_logger.debug('the call is going to be:')
-    fre_logger.debug(f"\n glob.glob({statics_path+'/*static*.nc'})  \n")
+    fre_logger.debug("\n glob.glob(%s)  \n", statics_path+'/*static*.nc')
 
     statics_file_glob = glob.glob(statics_path+'/*static*.nc') # update to use component TODO
     fre_logger.debug('the output glob looks like: %s', statics_file_glob)
