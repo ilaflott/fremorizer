@@ -451,7 +451,7 @@ def create_tmp_dir( outdir: str,
                 fre_logger.warning(
                     'could not read outdir from json_exp_config. the cmor module will throw a toothless warning')
 
-    tmp_dir = str(Path("{}/CMOR_tmp/".format(outdir)).resolve())
+    tmp_dir = str(Path(f"{outdir}/CMOR_tmp/").resolve())
     try:
         os.makedirs(tmp_dir, exist_ok=True)
         if outdir_from_exp_config is not None:
@@ -462,7 +462,7 @@ def create_tmp_dir( outdir: str,
                 fre_logger.info('attempting to create %s dir in tmp_dir targ did not work', outdir_from_exp_config)
                 fre_logger.info('... attempt to avoid a toothless cmor warning failed... moving on')
     except Exception as exc:
-        raise OSError('problem creating tmp output directory {}. stop.'.format(tmp_dir)) from exc
+        raise OSError(f'problem creating tmp output directory {tmp_dir}. stop.') from exc
 
     return tmp_dir
 
@@ -482,8 +482,8 @@ def get_json_file_data( json_file_path: Optional[str] = None) -> dict:
             return json.load(json_config_file)
     except Exception as exc:
         raise FileNotFoundError(
-            'ERROR: json_file_path file cannot be opened.\n'
-            '       json_file_path = {}'.format(json_file_path)
+             'ERROR: json_file_path file cannot be opened.\n'
+            f'       json_file_path = {json_file_path}'
         ) from exc
 
 
