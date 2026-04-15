@@ -206,7 +206,7 @@ class _FakeTime:
 
     Only sets an attribute when a non-None value is supplied, so that
     accessing an absent attribute raises AttributeError — matching the
-    behaviour of a real netCDF4.Variable object.
+    behavior of a real netCDF4.Variable object.
     """
     def __init__(self, calendar=None, calendar_type=None):
         if calendar is not None:

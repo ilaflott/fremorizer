@@ -56,7 +56,7 @@ If you're trying to develop the package, or edit the code for contributing in ei
 trying to use `fremorizer` and you want to deal with as few technical details as possible, *this is not for you*. 
 
 Add `-e` to the `pip` step for an editable install. `--recursive` pulls in required configuration in the form of CMIP CMOR tables, and
-can be omitted if desired at the cost of local testing funtionality out-of-box
+can be omitted if desired at the cost of local testing functionality out-of-box
 ```bash
 # this does work, right now
 git clone --recursive https://github.com/ilaflott/fremorizer.git
@@ -106,7 +106,7 @@ fremor init      # Initialize CMOR configuration resources: generate template us
 fremor find      # Find and print variables in MIP tables according to your variable lists or other input
 fremor varlist   # Create a simple variable list of netCDF files in a directory
 fremor config    # Generate a basic CMOR YAML configuration from a pp directory tree
-fremor yaml      # Bulk routine for processesing data based on a CMOR YAML config, calls fremor run many times
+fremor yaml      # Bulk routine for processing data based on a CMOR YAML config, calls fremor run many times
 fremor run       # Lowest-level routine, no CMOR YAML needed, rewrites output files in a directory with CMOR
 ```
 

@@ -1057,7 +1057,7 @@ def cmor_run_subtool(indir: str = None,
 
     # CHECK that the user's input variables make sense against those in the targeted table
     # if the check(s) pass, the final list of variables to run is stored in vars_to_run
-    # if opt_var_name is specified, the routinue is short-circuited to care only about opt_var_name
+    # if opt_var_name is specified, the routine is short-circuited to care only about opt_var_name
     vars_to_run = {}
     for local_var in var_list:
         if opt_var_name is not None and opt_var_name in mip_var_list:

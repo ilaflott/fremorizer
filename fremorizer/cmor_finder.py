@@ -48,7 +48,7 @@ def print_var_content(table_config_file: IO[str],
     .. note:: If the variable is not found, logs a debug message and returns.
     .. note:: Only prints selected fields, omitting any in DO_NOT_PRINT_LIST.
     """
-    # this function can assume the existence of this was checked in the prev routinue.
+    # this function can assume the existence of this was checked in the prev routine.
     proj_table_vars = json.load(table_config_file)
 
     table_name = None
