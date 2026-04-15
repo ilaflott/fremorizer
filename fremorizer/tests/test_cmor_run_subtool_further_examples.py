@@ -3,13 +3,11 @@ expanded set of tests for fremor run focus on cases beyond test_cmor_run_subtool
 '''
 
 from datetime import date
+import glob
+import os
 from pathlib import Path
 import shutil
-import glob
-#import time
-#import platform
 import subprocess
-import os
 
 import pytest
 
@@ -46,7 +44,7 @@ def _cleanup():
     if Path(f'{OUTDIR}').exists():
         try:
             shutil.rmtree(f'{OUTDIR}')
-        except:
+        except OSError:
             #time.sleep(60)
             shutil.rmtree(f'{OUTDIR}')
     assert not Path(f'{OUTDIR}').exists()

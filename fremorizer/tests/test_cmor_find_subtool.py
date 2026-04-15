@@ -35,7 +35,7 @@ def test_make_simple_varlist(temp_dir):
     assert output_file.exists()
 
     # Check the contents of the output file
-    with open(output_file, 'r') as f:
+    with open(output_file, 'r', encoding='utf-8') as f:
         var_list = json.load(f)
 
     expected_var_list = {
@@ -48,11 +48,11 @@ def test_make_simple_varlist(temp_dir):
 
 def test_find_subtool_no_json_dir_err(temp_dir):
     ''' test json_table_config_dir does not exist error '''
-    target_dir_DNE = Path(temp_dir) / 'foo'
-    assert not target_dir_DNE.exists(), 'target dir should not exist for this test'
-    with pytest.raises(OSError, match=f'ERROR directory {target_dir_DNE} does not exist! exit.'):
+    target_dir_dne = Path(temp_dir) / 'foo'
+    assert not target_dir_dne.exists(), 'target dir should not exist for this test'
+    with pytest.raises(OSError, match=f'ERROR directory {target_dir_dne} does not exist! exit.'):
         cmor_find_subtool(json_var_list=None,
-                          json_table_config_dir=str(target_dir_DNE),
+                          json_table_config_dir=str(target_dir_dne),
                           opt_var_name=None)
 
 

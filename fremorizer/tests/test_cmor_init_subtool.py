@@ -170,7 +170,7 @@ def test_cmor_init_tables_dir_and_exp_config(tmp_path):
 
     # Verify exp_config was created
     assert exp_config.exists()
-    with open(exp_config) as f:
+    with open(exp_config, encoding='utf-8') as f:
         config = json.load(f)
     assert config['mip_era'] == 'CMIP6'
 

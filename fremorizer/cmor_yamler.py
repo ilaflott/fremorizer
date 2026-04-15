@@ -1,6 +1,6 @@
 """
-YAML-Driven CMORization Workflow Tools
-======================================
+``fremor yaml``: YAML-Driven CMORization Workhorse
+==================================================
 
 This module powers the ``fremor yaml`` command, steering the CMORization workflow by parsing model-YAML
 files that describe target experiments and their configurations. It combines model-level and experiment-level
@@ -239,39 +239,39 @@ def cmor_yaml_subtool( yamlfile: str = None,
 
             if dry_run_mode:
                 if print_cli_call:
-                    fre_logger.info(  '--DRY RUN CLI CALL---\n'
-                                      'fremor run -v -v \\ \n'
-                                      f'    --indir {indir} \\ \n'
-                                      f'    --varlist {json_var_list} \\ \n'
-                                      f'    --table_config {json_mip_table_config} \\ \n'
-                                      f'    --exp_config {json_exp_config} \\ \n'
-                                      f'    --outdir {cmor_run_call_outdir} \\ \n'
-                                      f'    --run_one \\ \n'
-                                      f'    --opt_var_name {opt_var_name} ,\n'
-                                      f'    --grid_desc "{grid_desc}" \\ \n'
-                                      f'    --grid_label {grid_label} \\ \n'
-                                      f'    --nom_res "{nom_res}" \\ \n'
-                                      f'    --start {start} \\ \n'
-                                      f'    --stop {stop} \\ \n'
-                                      f'    --calendar {calendar_type}'
-                                      '\n' )
+                    fre_logger.info( '%s', '--DRY RUN CLI CALL---\n' + \
+                                           'fremor run -v -v \\ \n' + \
+                                          f'    --indir {indir} \\ \n' + \
+                                          f'    --varlist {json_var_list} \\ \n' + \
+                                          f'    --table_config {json_mip_table_config} \\ \n' + \
+                                          f'    --exp_config {json_exp_config} \\ \n' + \
+                                          f'    --outdir {cmor_run_call_outdir} \\ \n' + \
+                                           '    --run_one \\ \n' + \
+                                          f'    --opt_var_name {opt_var_name} ,\n' + \
+                                          f'    --grid_desc "{grid_desc}" \\ \n' + \
+                                          f'    --grid_label {grid_label} \\ \n' + \
+                                          f'    --nom_res "{nom_res}" \\ \n' + \
+                                          f'    --start {start} \\ \n' + \
+                                          f'    --stop {stop} \\ \n' + \
+                                          f'    --calendar {calendar_type}'
+                                           '\n' )
                 else:
-                    fre_logger.info(  '--DRY RUN CALL---\n'
-                                      'cmor_run_subtool(\n'
-                                      f'    indir = {indir} ,\n'
-                                      f'    json_var_list = {json_var_list} ,\n'
-                                      f'    json_table_config = {json_mip_table_config} ,\n'
-                                      f'    json_exp_config = {json_exp_config} ,\n'
-                                      f'    outdir = {cmor_run_call_outdir} ,\n'
-                                      f'    run_one_mode = {run_one_mode} ,\n'
-                                      f'    opt_var_name = {opt_var_name} ,\n'
-                                      f'    grid = {grid_desc} ,\n'
-                                      f'    grid_label = {grid_label} ,\n'
-                                      f'    nom_res = {nom_res} ,\n'
-                                      f'    start = {start} ,\n'
-                                      f'    stop = {stop} ,\n'
-                                      f'    calendar_type = {calendar_type}'
-                                      ')\n' )
+                    fre_logger.info( '%s', '--DRY RUN CALL---\n' + \
+                                           'cmor_run_subtool(\n' + \
+                                          f'    indir = {indir} ,\n' + \
+                                          f'    json_var_list = {json_var_list} ,\n' + \
+                                          f'    json_table_config = {json_mip_table_config} ,\n' + \
+                                          f'    json_exp_config = {json_exp_config} ,\n' + \
+                                          f'    outdir = {cmor_run_call_outdir} ,\n' + \
+                                          f'    run_one_mode = {run_one_mode} ,\n' + \
+                                          f'    opt_var_name = {opt_var_name} ,\n' + \
+                                          f'    grid = {grid_desc} ,\n' + \
+                                          f'    grid_label = {grid_label} ,\n' + \
+                                          f'    nom_res = {nom_res} ,\n' + \
+                                          f'    start = {start} ,\n' + \
+                                          f'    stop = {stop} ,\n' + \
+                                          f'    calendar_type = {calendar_type}'
+                                           ')\n' )
                 continue
             cmor_run_subtool( #uncovered
                 indir = indir ,
