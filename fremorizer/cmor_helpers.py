@@ -53,7 +53,7 @@ from typing import Optional, List, Union
 import numpy as np
 from netCDF4 import Dataset, Variable
 
-from .cmor_constants import ( ARCHIVE_GOLD_DATA_DIR, CMIP7_GOLD_OCEAN_FILE_STUB, CMIP6_GOLD_OCEAN_FILE_STUB,
+from .cmor_constants import ( ARCHIVE_GOLD_DATA_DIR, CMIP7_GOLD_OCEAN_FILE_STUB, # CMIP6_GOLD_OCEAN_FILE_STUB,
                               INPUT_TO_MIP_VERT_DIM )
 
 fre_logger = logging.getLogger(__name__)

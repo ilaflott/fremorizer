@@ -69,7 +69,7 @@ def test_make_simple_varlist_success(temp_netcdf_dir, tmp_path):
 
     # Verify output file was created
     assert output_file.exists()
-    with open(output_file, "r") as f:
+    with open(output_file, "r", encoding='utf-8') as f:
         saved_data = json.load(f)
         assert saved_data == result
 

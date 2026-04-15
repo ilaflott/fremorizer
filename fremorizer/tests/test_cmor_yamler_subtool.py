@@ -128,7 +128,7 @@ def yamler_env(tmp_path):
 # ================================================================
 
 @patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_cmor_yaml_subtool_dry_run_false(mock_consolidate, yamler_env):
+def test_cmor_yaml_subtool_dry_run_false(mock_consolidate, yamler_env): # pylint: disable=redefined-outer-name
     '''
     Full end-to-end: cmor_yaml_subtool with dry_run_mode=False should
     call cmor_run_subtool and produce at least one CMOR-ised .nc file.

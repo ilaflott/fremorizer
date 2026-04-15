@@ -90,7 +90,7 @@ def test_no_omission_log_when_all_succeed(mock_cmorize, caplog):
 @patch('fremorizer.cmor_mixer.cmorize_target_var_files')
 def test_omission_tracking_mixed_success_failure(mock_cmorize, caplog):
     """Only failed variables appear in the omission log with their file paths."""
-    def side_effect( local_var ):
+    def side_effect( indir, target_var, local_var, *args, **kwargs ): # pylint: disable=unused-argument
         if local_var == 'bad_var':
             raise ValueError('bad variable error')
 

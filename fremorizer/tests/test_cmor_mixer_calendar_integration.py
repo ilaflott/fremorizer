@@ -90,10 +90,10 @@ def test_cmor_run_w_cal_type(
     mock_glob,
     mock_cmorize,
     mock_update_cal,
-    exp_config_file,
-    var_list_file,
-    table_config_file,
-    fake_nc_filenames,
+    exp_config_file, # pylint: disable=redefined-outer-name
+    var_list_file, # pylint: disable=redefined-outer-name
+    table_config_file, # pylint: disable=redefined-outer-name
+    fake_nc_filenames, # pylint: disable=redefined-outer-name
     tmp_path
 ):
     """When calendar_type is provided, update_calendar_type must be called."""
@@ -123,10 +123,10 @@ def test_cmor_run_no_cal_type(
     mock_glob,
     mock_cmorize,
     mock_update_cal,
-    exp_config_file,
-    var_list_file,
-    table_config_file,
-    fake_nc_filenames,
+    exp_config_file, # pylint: disable=redefined-outer-name
+    var_list_file, # pylint: disable=redefined-outer-name
+    table_config_file, # pylint: disable=redefined-outer-name
+    fake_nc_filenames, # pylint: disable=redefined-outer-name
     tmp_path
 ):
     """When calendar_type is None (default), update_calendar_type must NOT be called."""
