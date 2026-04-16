@@ -25,7 +25,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           auto-activate-base: true
-          channels: conda-forge,noaa-gfdl
+          channels: conda-forge,noaa-gfdl,ilaflott
 
       - name: Configure Conda
         run: |
