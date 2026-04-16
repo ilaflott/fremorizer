@@ -209,11 +209,16 @@ See `CONDA_FORGE_FEEDSTOCK_PLAN.md` for the steps and follow-up tasks to submit 
 
 ## Releases and Versioning
 
-`fremorizer` has it's own versioning approach/format to avoid confusion with `fre-workflows` and `fre-cli`, which often demand that the version tags match.
-the version format is `X.Y.Z`. To publish new release carefully follow the below procedure:
-1. create a new branch off of `main`
-2. edit the version number in `fremorizer/_version.py` to the desired version tag and open a PR
+`fremorizer` uses a post-release scheme to identify development beyond the latest tagged version and tie the current `main` branch to a
+`conda` package versioned as `develop`. To avoid confusion with `fre-workflows` and `fre-cli`, which often demand that the version tags 
+match, `fremorizer`'s version format is `X.Y.Z[.post]`. 
+
+### new published release procedure 
+
+To publish new release carefully follow the below procedure:
+1. create a new branch off of `main`, which is already published to `conda` under `develop`/the previous tagged version + `.post`
+2. edit the version number in `fremorizer/_version.py` from the current one, to the desired version tag, remove `.post`, then open a PR. edit nothing else (usually).
 3. confirm the branch is functional by letting workflows finish, if you see green checks only, proceed. otherwise, stop and debug.
-4. draft a new release pointing to the PR branch, click release. the publishing workflow should trigger and finish.
-5. releases in this repository are immutable, **so even if the release workflow fails, breathe and move on to the next step.**
-6. edit the version number in `fremorizer/_version.py` to `postX.Y.Z`, and merge the PR assuming all workflow steps passed.
+4. draft a new release pointing to the PR branch, click release. the publishing workflow should trigger and finish, and you should see the `X.Y.Z` version in the conda channel.
+5. *releases in this repository are immutable*, **so even if the release workflow fails, breathe and move on to the next step.**
+6. edit the version number in `fremorizer/_version.py` to `X.Y.Z.post`, and merge the PR to main workflow steps passed. **`publish_conda`** will trigger again and upload what is in `main` under the `conda` version `develop` and `pip` version `X.Y.Z.post`
