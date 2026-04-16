@@ -1,28 +1,19 @@
-
 # `fremorizer`
+[![Anaconda-Server Badge](https://anaconda.org/ilaflott/fremorizer/badges/version.svg)](https://anaconda.org/ilaflott/fremorizer)
+[![Anaconda-Server Badge](https://anaconda.org/ilaflott/fremorizer/badges/latest_release_date.svg)](https://anaconda.org/ilaflott/fremorizer)
+[![Anaconda-Server Badge](https://anaconda.org/ilaflott/fremorizer/badges/latest_release_relative_date.svg)](https://anaconda.org/ilaflott/fremorizer)
+
+[![publish_conda](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml)
+[![readthedocs](https://app.readthedocs.org/projects/fremorizer/badge/?version=latest&style=flat)](https://fremorizer.readthedocs.io/en/latest/)
+
 [![pylint](https://github.com/ilaflott/fremorizer/actions/workflows/pylint.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/pylint.yml)
 [![pylint](https://img.shields.io/badge/pylint-%E2%89%A59.6-brightgreen)](https://github.com/NOAA-GFDL/epmt/actions/workflows/build_and_test_epmt.yml)
 [![codecov](https://codecov.io/gh/ilaflott/fremorizer/branch/main/graph/badge.svg)](https://codecov.io/gh/ilaflott/fremorizer)
-[![publish_conda](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml)
-[![readthedocs](https://app.readthedocs.org/projects/fremorizer/badge/?version=latest&style=flat)](https://fremorizer.readthedocs.io/en/latest/)
+
 
 Simply put, `fremorizer` CMORizes FRE output with `CMOR`. 
 
 `fremorizer` is a `conda` package, it's documentation can be found on [`readthedocs`](https://fremorizer.readthedocs.io/en/latest/).
-
-
-<!-- [![Anaconda-Server Badge](https://anaconda.org/noaa-gfdl/fremorizer/badges/version.svg)](https://anaconda.org/noaa-gfdl/fremorizer)
-[![Anaconda-Server Badge](https://anaconda.org/noaa-gfdl/fremorizer/badges/latest_release_date.svg)](https://anaconda.org/noaa-gfdl/fremorizer)
-[![Anaconda-Server Badge](https://anaconda.org/noaa-gfdl/fremorizer/badges/latest_release_relative_date.svg)](https://anaconda.org/noaa-gfdl/fremorizer)
--->
-
-
-
-
-
-
-
-
 
 
 
@@ -215,3 +206,14 @@ Apache License 2.0 — see [LICENSE.md](LICENSE.md)
 ## Conda-forge feedstock
 
 See `CONDA_FORGE_FEEDSTOCK_PLAN.md` for the steps and follow-up tasks to submit and maintain the conda-forge feedstock for `fremorizer`.
+
+## Releases and Versioning
+
+`fremorizer` has it's own versioning approach/format to avoid confusion with `fre-workflows` and `fre-cli`, which often demand that the version tags match.
+the version format is `X.Y.Z`. To publish new release carefully follow the below procedure:
+1. create a new branch off of `main`
+2. edit the version number in `fremorizer/_version.py` to the desired version tag and open a PR
+3. confirm the branch is functional by letting workflows finish, if you see green checks only, proceed. otherwise, stop and debug.
+4. draft a new release pointing to the PR branch, click release. the publishing workflow should trigger and finish.
+5. releases in this repository are immutable, **so even if the release workflow fails, breathe and move on to the next step.**
+6. edit the version number in `fremorizer/_version.py` to `postX.Y.Z`, and merge the PR assuming all workflow steps passed.
