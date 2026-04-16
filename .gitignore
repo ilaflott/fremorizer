@@ -157,6 +157,7 @@ tmp/
 
 # QA results
 esgf_qa_results/
+wcrp_compliance_reports/
 
 # autogen'd by doc build
 docs/fremorizer.*

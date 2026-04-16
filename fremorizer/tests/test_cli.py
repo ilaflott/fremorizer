@@ -15,8 +15,10 @@ Migrated from NOAA-GFDL/fre-cli fre/tests/test_fre_cmor_cli.py.
 '''
 
 import json
+import os
 from pathlib import Path
 import shutil
+import tempfile
 from unittest.mock import patch
 
 from click.testing import CliRunner
@@ -32,13 +34,15 @@ from .conftest import (
 runner = CliRunner()
 
 # log format strings produced by the fremor group callback (cli.py / fremor)
-LOG_INFO_LINE = '[ INFO:                  cli.py:                  fremor] fre_file_handler added to base_fre_logger\n' # pylint: disable=line-too-long
-LOG_DEBUG_LINE = '[DEBUG:                  cli.py:                  fremor] click entry-point function call done.\n' # pylint: disable=line-too-long
+LOG_INFO_LINE = '[ INFO:                  cli.py:                  fremor] ' + \
+                'fre_file_handler added to base_fre_logger\n'
+LOG_DEBUG_LINE = '[DEBUG:                  cli.py:                  fremor] ' + \
+                 'click entry-point function call done.\n'
 
 
 # ── setup ──────────────────────────────────────────────────────────────────
 
-def test_setup_test_files(cli_sos_nc_file, cli_sosv2_nc_file):
+def test_setup_test_files(cli_sos_nc_file, cli_sosv2_nc_file): # pylint: disable=redefined-outer-name
     """Verify all required NetCDF test files exist via session-scoped fixtures."""
     assert Path(cli_sos_nc_file).exists()
     assert Path(cli_sosv2_nc_file).exists()
@@ -185,7 +189,7 @@ def test_cli_fremor_run_case1(cli_sos_nc_file, tmp_path):
     assert Path(cli_sos_nc_file).exists(), 'input file should still exist'
 
 
-def test_cli_fremor_run_case2(cli_sosv2_nc_file, tmp_path):
+def test_cli_fremor_run_case2(cli_sosv2_nc_file, tmp_path): # pylint: disable=redefined-outer-name
     '''fremor run, test-use case 2: sosV2 varlist_diff (CMIP6)'''
     outdir = str(tmp_path / 'outdir')
 
@@ -207,7 +211,7 @@ def test_cli_fremor_run_case2(cli_sosv2_nc_file, tmp_path):
     assert Path(cli_sosv2_nc_file).exists(), 'input file should still exist'
 
 
-def test_cli_fremor_run_cmip7_case1(cli_sos_nc_file, tmp_path):
+def test_cli_fremor_run_cmip7_case1(cli_sos_nc_file, tmp_path): # pylint: disable=redefined-outer-name
     '''fremor run, test-use case for cmip7: sos → sos'''
     outdir = str(tmp_path / 'outdir')
 
@@ -229,7 +233,7 @@ def test_cli_fremor_run_cmip7_case1(cli_sos_nc_file, tmp_path):
     assert Path(cli_sos_nc_file).exists(), 'input file should still exist'
 
 
-def test_cli_fremor_run_cmip7_case2(cli_sosv2_nc_file, tmp_path):
+def test_cli_fremor_run_cmip7_case2(cli_sosv2_nc_file, tmp_path): # pylint: disable=redefined-outer-name
     '''fremor run, test-use case 2 for cmip7: sosV2 varlist_diff'''
     outdir = str(tmp_path / 'outdir')
 
@@ -302,7 +306,7 @@ def test_cli_fremor_config_opt_dne():
     assert result.exit_code == 2
 
 
-def test_cli_fremor_config_case1(cli_sos_nc_file):
+def test_cli_fremor_config_case1(cli_sos_nc_file): # pylint: disable=redefined-outer-name
     '''
     fremor config -- generate a CMOR YAML config from a mock pp directory tree.
     Uses the ocean_sos_var_file test data with a mock pp layout.
@@ -408,7 +412,7 @@ def test_cli_fremor_varlist_opt_dne():
     assert result.exit_code == 2
 
 
-def test_cli_fremor_varlist_no_table_filter(cli_sos_nc_file, cli_sosv2_nc_file, tmp_path):
+def test_cli_fremor_varlist_no_table_filter(cli_sos_nc_file, cli_sosv2_nc_file, tmp_path): # pylint: disable=redefined-outer-name
     '''fremor varlist — no MIP table filter.
     Creates a variable list from the ocean_sos_var_file test data without a MIP table,
     so both sos and sosV2 should appear.'''
@@ -431,7 +435,7 @@ def test_cli_fremor_varlist_no_table_filter(cli_sos_nc_file, cli_sosv2_nc_file, 
     assert len(var_list) == 2
 
 
-def test_cli_fremor_varlist_cmip6_table_filter(cli_sos_nc_file, cli_sosv2_nc_file, tmp_path):
+def test_cli_fremor_varlist_cmip6_table_filter(cli_sos_nc_file, cli_sosv2_nc_file, tmp_path): # pylint: disable=redefined-outer-name
     '''fremor varlist — with CMIP6 Omon MIP table filter.
     Only sos should survive; sosV2 is not in the CMIP6 Omon table.'''
     output_varlist = tmp_path / 'test_varlist_cmip6_filter.json'
@@ -453,7 +457,7 @@ def test_cli_fremor_varlist_cmip6_table_filter(cli_sos_nc_file, cli_sosv2_nc_fil
     assert 'sosV2' not in var_list, 'sosV2 should NOT be in the CMIP6-filtered list'
 
 
-def test_cli_fremor_varlist_cmip7_table_filter(cli_sos_nc_file, cli_sosv2_nc_file, tmp_path):
+def test_cli_fremor_varlist_cmip7_table_filter(cli_sos_nc_file, cli_sosv2_nc_file, tmp_path): # pylint: disable=redefined-outer-name
     '''fremor varlist — with CMIP7 ocean MIP table filter.
     sos should survive (sos_tavg-u-hxy-sea splits to sos); sosV2 should not.'''
     output_varlist = tmp_path / 'test_varlist_cmip7_filter.json'
@@ -473,3 +477,184 @@ def test_cli_fremor_varlist_cmip7_table_filter(cli_sos_nc_file, cli_sosv2_nc_fil
 
     assert 'sos' in var_list, 'sos should be in the CMIP7-filtered list'
     assert 'sosV2' not in var_list, 'sosV2 should NOT be in the CMIP7-filtered list'
+
+
+# ── fremor init ───────────────────────────────────────────────────────────
+
+def test_cli_fremor_init():
+    ''' fremor init (no args) '''
+    result = runner.invoke(fremor, args=["init"])
+    assert result.exit_code == 2
+
+def test_cli_fremor_init_help():
+    ''' fremor init --help '''
+    result = runner.invoke(fremor, args=["init", "--help"])
+    assert result.exit_code == 0
+
+def test_cli_fremor_init_opt_dne():
+    ''' fremor init optionDNE '''
+    result = runner.invoke(fremor, args=["init", "optionDNE"])
+    assert result.exit_code == 2
+
+
+def test_cli_fremor_init_cmip6_exp_config(tmp_path):
+    '''
+    fremor init -- generate a CMIP6 experiment config template.
+    '''
+    output_path = tmp_path / 'test_cmip6_init_template.json'
+
+    result = runner.invoke(fremor, args=[
+        "init",
+        "--mip_era", "cmip6",
+        "--exp_config", str(output_path)
+    ])
+    assert result.exit_code == 0, f'init failed: {result.output}'
+    assert output_path.exists(), 'output config was not created'
+
+    with open(output_path, 'r', encoding='utf-8') as f:
+        config = json.load(f)
+
+    assert config['mip_era'] == 'CMIP6'
+    assert config['_cmip6_option'] == 'CMIP6'
+    assert 'experiment_id' in config
+    assert 'output_path_template' in config
+
+
+def test_cli_fremor_init_cmip7_exp_config(tmp_path):
+    '''
+    fremor init -- generate a CMIP7 experiment config template.
+    '''
+    output_path = tmp_path / 'test_cmip7_init_template.json'
+
+    result = runner.invoke(fremor, args=[
+        "init",
+        "--mip_era", "cmip7",
+        "--exp_config", str(output_path)
+    ])
+    assert result.exit_code == 0, f'init failed: {result.output}'
+    assert output_path.exists(), 'output config was not created'
+
+    with open(output_path, 'r', encoding='utf-8') as f:
+        config = json.load(f)
+
+    assert config['mip_era'] == 'CMIP7'
+    assert config['_cmip7_option'] == 1
+    assert 'experiment_id' in config
+    assert 'output_path_template' in config
+
+
+def test_cli_fremor_init_default_name(tmp_path):
+    '''
+    fremor init -- when no --exp_config is given and no --tables_dir,
+    a default-named file should be created in the current directory.
+    '''
+    # Use CliRunner's isolated_filesystem to avoid polluting the actual working directory
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        result = runner.invoke(fremor, args=[
+            "init",
+            "--mip_era", "cmip6"
+        ])
+        assert result.exit_code == 0, f'init failed: {result.output}'
+
+        default_path = Path('CMOR_cmip6_template.json')
+        assert default_path.exists(), 'default output config was not created'
+
+        with open(default_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        assert config['mip_era'] == 'CMIP6'
+
+
+# ── fremor run: logfile + omission tracking ───────────────────────────────
+
+def test_cli_fremor_run_with_logfile(cli_sos_nc_file, tmp_path): # pylint: disable=redefined-outer-name
+    '''
+    fremor -vv -l LOGFILE run ...
+
+    Runs a real CMOR workflow with the -l flag and verifies that the resulting
+    log file contains log lines from both cli.py (the CLI entry point) and
+    cmor_mixer (the CMOR processing module).
+    '''
+    log_path = tmp_path / 'TEST_CMOR_RUN.log'
+    outdir = str(tmp_path / 'outdir')
+
+    result = runner.invoke(fremor, args=[
+        '-vv', '-l', str(log_path),
+        'run', '--run_one',
+        '--indir', str(INDIR),
+        '--varlist', str(VARLIST),
+        '--table_config', str(CMIP6_TABLE_CONFIG),
+        '--exp_config', str(EXP_CONFIG),
+        '--outdir', outdir,
+        '--calendar', 'julian',
+        '--grid_label', 'gr',
+        '--grid_desc', 'FOO_BAR_PLACEHOLD',
+        '--nom_res', '10000 km',
+    ])
+
+    assert result.exit_code == 0, f'run failed: {result.output}'
+    assert log_path.exists(), 'log file was not created'
+
+    log_text = log_path.read_text(encoding='utf-8')
+
+    # cli.py entry-point must have written this line when setting up the file handler
+    assert 'fre_file_handler added to base_fre_logger' in log_text, \
+        'expected cli.py log line not found in log file'
+
+    # cmor_mixer must have emitted at least one line carrying its module filename
+    assert 'cmor_mixer.py' in log_text, \
+        'expected cmor_mixer.py log line not found in log file'
+
+
+def test_cli_fremor_run_with_logfile_omission_case(cli_sos_nc_file, cli_sosv2_nc_file, tmp_path): # pylint: disable=redefined-outer-name
+    '''
+    fremor -vv -l LOGFILE run ...
+
+    Uses a varlist where sos->sos succeeds and sosV2->tob fails (tob is a valid
+    CMIP6_Omon variable but the sosV2 file contains sos data, not tob).
+    Verifies the OMISSION LOG appears in the log file with the failed variable info.
+    '''
+    log_path = tmp_path / 'TEST_CMOR_RUN_OMISSION.log'
+    outdir = str(tmp_path / 'outdir')
+
+    # create a temporary varlist: sos->sos will succeed, sosV2->tob will fail
+    varlist_data = {'sos': 'sos', 'sosV2': 'tob'}
+    varlist_fd, varlist_path = tempfile.mkstemp(suffix='.json')
+    with os.fdopen(varlist_fd, 'w') as f:
+        json.dump(varlist_data, f)
+
+    result = runner.invoke(fremor, args=[
+        '-vv', '-l', str(log_path),
+        'run',
+        '--indir', str(INDIR),
+        '--varlist', varlist_path,
+        '--table_config', str(CMIP6_TABLE_CONFIG),
+        '--exp_config', str(EXP_CONFIG),
+        '--outdir', outdir,
+        '--calendar', 'julian',
+        '--grid_label', 'gr',
+        '--grid_desc', 'FOO_BAR_PLACEHOLD',
+        '--nom_res', '10000 km',
+    ])
+
+    assert result.exit_code == 0, f'run failed: {result.output}'
+    assert log_path.exists(), 'log file was not created'
+
+    log_text = log_path.read_text(encoding='utf-8')
+
+    # the omission log summary must appear
+    assert 'OMISSION LOG' in log_text, \
+        'expected OMISSION LOG not found in log file'
+
+    # the failed variable (sosV2/tob) must be mentioned in the omission
+    assert 'OMITTED local_var=sosV2 / target_var=tob' in log_text, \
+        'expected omission entry for sosV2/tob not found in log file'
+
+    # the expected file path for the omitted variable must appear
+    assert '.sosV2.nc' in log_text, \
+        'expected file path for omitted variable not found in log file'
+
+    # the CMOR module must have emitted log lines
+    assert 'cmor_mixer.py' in log_text, \
+        'expected cmor_mixer.py log line not found in log file'
+
+    Path(varlist_path).unlink(missing_ok=True)

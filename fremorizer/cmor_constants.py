@@ -1,6 +1,7 @@
 """
-fremorizer constants
-==================
+``fremor`` Constants: Centralized Module-Wide Config
+====================================================
+
 
 Centralized constants for the ``fremor`` package.  Every hard-coded
 value that was previously scattered across ``cmor_mixer``, ``cmor_helpers``,
@@ -17,7 +18,7 @@ Sections
 - **Archive / filesystem paths** – locations of gold-standard data sets.
 - **MIP-table filtering** – suffixes used to exclude non-variable-entry
   tables when scanning a MIP-tables directory.
-- **Output / display flags** – behavioural toggles for CLI and finder output.
+- **Output / display flags** – behavioral toggles for CLI and finder output.
 """
 
 import cmor

@@ -1,71 +1,139 @@
+
+# `fremorizer`
+
+Simply put, `fremorizer` CMORizes FRE output with `CMOR`, it is a `conda` package.
+
+Documentation can be found on [`readthedocs`](https://fremorizer.readthedocs.io/en/latest/).
+
+
 <!-- [![Anaconda-Server Badge](https://anaconda.org/noaa-gfdl/fremorizer/badges/version.svg)](https://anaconda.org/noaa-gfdl/fremorizer)
 [![Anaconda-Server Badge](https://anaconda.org/noaa-gfdl/fremorizer/badges/latest_release_date.svg)](https://anaconda.org/noaa-gfdl/fremorizer)
 [![Anaconda-Server Badge](https://anaconda.org/noaa-gfdl/fremorizer/badges/latest_release_relative_date.svg)](https://anaconda.org/noaa-gfdl/fremorizer)
 -->
 
-# fremorizer
-
-[![publish_conda](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml)
+| Python 3.11 | Python 3.12 | Python 3.13 | Python 3.14 |
+|-------------|-------------|-------------|-------------|
+| [![3.11](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.11) | [![3.12](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.12) | [![3.13](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.13) | [![3.14](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.14) |
 
 [![pylint](https://github.com/ilaflott/fremorizer/actions/workflows/pylint.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/pylint.yml)
-[![pylint](https://img.shields.io/badge/pylint-%E2%89%A59.4-brightgreen)](https://github.com/NOAA-GFDL/epmt/actions/workflows/build_and_test_epmt.yml)
-
+[![pylint](https://img.shields.io/badge/pylint-%E2%89%A59.6-brightgreen)](https://github.com/NOAA-GFDL/epmt/actions/workflows/build_and_test_epmt.yml)
 [![codecov](https://codecov.io/gh/ilaflott/fremorizer/branch/main/graph/badge.svg)](https://codecov.io/gh/ilaflott/fremorizer)
+[![wcrp_compliance_check](https://github.com/ilaflott/fremorizer/actions/workflows/wcrp_compliance_check.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/wcrp_compliance_check.yml)
+
+[![publish_conda](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml)
 [![readthedocs](https://app.readthedocs.org/projects/fremorizer/badge/?version=latest&style=flat)](https://fremorizer.readthedocs.io/en/latest/)
 
-| Workflow | Python 3.9 | Python 3.10 | Python 3.11 |
-|----------|------------|-------------|------------|
-| **create_test_conda_env** | [![3.9](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.9) | [![3.10](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.10) | [![3.11](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.11) |
 
 [![esgf_qa_check](https://github.com/ilaflott/fremorizer/actions/workflows/esgf_qa_check.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/esgf_qa_check.yml)
 
-Model output rewriter (CMORizer) for FRE/FMS based models.
 
-`fremorizer` is an independent package extracted from the `fre.cmor` submodule of
-[fre-cli](https://github.com/NOAA-GFDL/fre-cli). It rewrites climate model output
-files with CMIP-compliant metadata for downstream publishing using the
-[CMOR](https://cmor.llnl.gov/) library.
 
-## Installation
 
-### Via pip
+
+
+
+## Background and Purpose
+`fremorizer` is a model output rewriter (CMORizer) for FRE/FMS based models and output. It was originally the `fre.cmor` submodule of 
+[`NOAA-GFDL/fre-cli`](https://github.com/NOAA-GFDL/fre-cli). `fremorizer` (or `fremor` for short) is geared for rewriting NOAA-GFDL 
+datasets for further quality control checks, assessments and data publishing pipelines in the context of CMIP7 using the 
+[`CMOR`](https://cmor.llnl.gov/) library.
+
+
+
+
+## Installation / Access
+
+### via PPAN / modules (COMING SOON/TODO)
 ```bash
-pip install fremorizer
+# this will be whatever is in main of this repository (COMING SOON/TODO)
+module load fremorizer/test
+
+# this will be a tagged version of the package in this repository
+module load fremorizer/YYYY.XX.[ZZ]{-alpha,-beta}
 ```
 
-### Via conda
-```bash
-conda install -c noaa-gfdl -c conda-forge fremorizer
-```
+### From source/checkout into a virtual environment (`conda` or `venv`) with `pip`
+If you're trying to develop the package, or edit the code for contributing in either a big or small way, this is for you. If you're just
+trying to use `fremorizer` and you want to deal with as few technical details as possible, *this is not for you*. 
 
-### From source
+Add `-e` to the `pip` step for an editable install. `--recursive` pulls in required configuration in the form of CMIP CMOR tables, and
+can be omitted if desired at the cost of local testing functionality out-of-box
 ```bash
-git clone https://github.com/ilaflott/fremorizer.git
+# this does work, right now
+git clone --recursive https://github.com/ilaflott/fremorizer.git
 cd fremorizer
-pip install .
+conda env create -f environment.yaml
+pip install . 
+```
+
+### Via `conda` (COMING SOON)
+If you just want an environment named `fremorizer` with the package:
+```
+# does not work yet, TODO
+conda create -n fremorizer noaa-gfdl::fremorizer
+conda activate fremorizer
+```
+
+or, if you've already activated a `conda` environment
+```bash
+# does not work yet, TODO
+conda install -c noaa-gfdl fremorizer
+
+# does not work yet, TODO
+# equivalent syntax
+conda install noaa-gfdl::fremorizer
 ```
 
 ## Usage
 
+### as a command line interface (CLI)
 The CLI entry point is `fremor`. It maps directly from the `fre cmor` subcommand:
+```bash
+# past fre-cli command
+fre -vv -l logfile.txt cmor <COMMAND> [OPTIONS]
 
+# fremorizer equivalent
+fremor -vv -l logfile.txt <COMMAND> [OPTIONS]
 ```
-# fre-cli equivalent:       fre -vv -l logfile.txt cmor run [OPTIONS]
-# fremorizer equivalent:    fremor -vv -l logfile.txt run [OPTIONS]
-```
+
+### as a `python` module
+Each CLI subcommand (`run`, `yaml`, etc.) maps to an API under under `fremor`, so the CLI functionality
+is equivalently available via `import` in scripts as a proper `python` module
 
 ### Subcommands
 
 ```bash
-fremor run       # Rewrite climate model output files with CMIP-compliant metadata
-fremor yaml      # Process a CMOR YAML configuration file
-fremor find      # Find variables in MIP tables
-fremor varlist   # Create a simple variable list from netCDF files
-fremor config    # Generate a CMOR YAML configuration from a pp directory tree
+fremor init      # Initialize CMOR configuration resources: generate template user config, fetch tables
+fremor find      # Find and print variables in MIP tables according to your variable lists or other input
+fremor varlist   # Create a simple variable list of netCDF files in a directory
+fremor config    # Generate a basic CMOR YAML configuration from a pp directory tree
+fremor yaml      # Bulk routine for processing data based on a CMOR YAML config, calls fremor run many times
+fremor run       # Lowest-level routine, no CMOR YAML needed, rewrites output files in a directory with CMOR
 ```
 
 For a concise overview of required inputs and sample commands, see the
 [CMOR Quickstart](docs/quickstart.rst).
+
+### Getting Started: Initialize CMOR Resources
+
+Before CMORizing data, you need an experiment configuration template and MIP tables.
+The `fremor init` command helps set up these resources:
+
+```bash
+# Generate a CMIP6 experiment config template and fetch CMIP6 tables
+fremor init -m cmip6 -e exp_config.json -t cmip6-tables
+
+# Generate a CMIP7 experiment config template and fetch CMIP7 tables (fast mode)
+fremor init -m cmip7 -e exp_config.json -t cmip7-tables --fast
+
+# Fetch tables for a specific release tag
+fremor init -m cmip6 -t cmip6-tables --tag 6.9.33
+```
+
+This command:
+- Generates an experiment configuration JSON template with required CMIP metadata fields
+- Fetches official MIP tables from trusted GitHub repositories (CMIP6: `pcmdi/cmip6-cmor-tables`, CMIP7: `WCRP-CMIP/cmip7-cmor-tables`)
+- Supports both `git clone` (default) and `curl` (`--fast`) methods for downloading official configurations
 
 ### Verbosity and Logging
 
@@ -89,18 +157,23 @@ fremor run \
 
 ## Requirements
 
-- Python >= 3.11
-- cftime
-- click
-- cmor
-- netCDF4
-- numpy
-- pyyaml
+- `python>=3.11`
+- `click>=8.2`
+- `cmor>=3.14.2`
+- `netCDF4>=1.7`
+- `numpy>=2`
+- `pyyaml`
+
+For development and testing, `pylint`, `pytest`, and `pytest-cov` are all highly recommended as helpful additions.
 
 ## Development
 
 ```bash
-# Create conda environment
+# Checkout code
+git clone --recursive https://github.com/ilaflott/fremorizer.git
+cd fremorizer
+
+# Create a conda environment
 conda env create -f environment.yaml
 conda activate fremorizer
 
@@ -108,7 +181,7 @@ conda activate fremorizer
 pip install -e .
 
 # Run tests
-pytest fremorizer/tests/ -v
+pytest fremorizer/tests/
 
 # Run linter
 pylint --rcfile pylintrc fremorizer/
@@ -134,11 +207,23 @@ To view QA results from a workflow run:
 4. View results using the ESGF-QA viewer or web interface
 
 ## Relationship to fre-cli
+### WCRP Compliance Checking
 
-`fremorizer` is a near-exact copy of the `fre.cmor` submodule from
-[NOAA-GFDL/fre-cli](https://github.com/NOAA-GFDL/fre-cli), extracted as an
-independent package. The `fremor yaml` subcommand optionally depends on
-`fre-cli`'s `yamltools` module for YAML consolidation.
+The `wcrp_compliance_check` workflow validates CMORized NetCDF outputs against WCRP project
+specifications using [cc-plugin-wcrp](https://github.com/ESGF/cc-plugin-wcrp), a plugin for
+the [IOOS compliance-checker](https://github.com/ioos/compliance-checker). This pipeline:
+
+- Runs automatically on pull requests and via manual dispatch
+- Executes unit tests to generate CMORized output files
+- Gathers and categorizes outputs by CMIP version (CMIP6, CMIP7)
+- Validates outputs using the `wcrp_cmip6` compliance checker
+- Uploads compliance reports as workflow artifacts (retained for 30 days)
+
+To view compliance results from a workflow/CI run:
+1. Navigate to the Actions tab in GitHub
+2. Select the `wcrp_compliance_check` workflow run
+3. Download the `wcrp-compliance-reports` artifact
+
 
 ## License
 

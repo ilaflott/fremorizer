@@ -37,12 +37,11 @@ exclude_patterns = []
 # Mock imports for dependencies not needed during doc build
 # This allows Sphinx to build docs without installing heavy dependencies
 autodoc_mock_imports = [
-    'cftime',
+    'click',
     'cmor',
     'netCDF4',
     'numpy',
-    'xarray',
-    'pandas',
+    'yaml',
     'pytest',
 ]
 
