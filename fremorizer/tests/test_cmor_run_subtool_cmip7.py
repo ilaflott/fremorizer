@@ -245,13 +245,18 @@ def test_fre_cmor_run_subtool_cmip7_case2(capfd):
                   Path(FULL_INPUTFILE_DIFF).exists() ] )
     _out, _err = capfd.readouterr()
 
-@pytest.mark.skip(reason='CMIP7 test not yet enabled')
 def test_fre_cmor_run_subtool_cmip7_case2_output_compare_data(capfd):
     ''' I/O data-only comparison of CMIP7 test case2 '''
+    print(f'FULL_OUTPUTFILE={FULL_OUTPUTFILE}')
     print(f'FULL_INPUTFILE_DIFF={FULL_INPUTFILE_DIFF}')
 
-    assert Path(FULL_INPUTFILE_DIFF).exists(), \
-        f'Input file not found: {FULL_INPUTFILE_DIFF}'
+    with netCDF4.Dataset(FULL_INPUTFILE_DIFF) as ds_in, \
+         netCDF4.Dataset(FULL_OUTPUTFILE) as ds_out:
+        # file formats should differ: CMOR converts input to NETCDF4_CLASSIC
+        assert ds_in.file_format != ds_out.file_format, \
+            f"expected file formats to differ, got input={ds_in.file_format}, output={ds_out.file_format}"
+
+        _assert_data_matches(ds_in, ds_out)
     _out, _err = capfd.readouterr()
 
 @pytest.mark.skip(reason='CMIP7 test not yet enabled')
