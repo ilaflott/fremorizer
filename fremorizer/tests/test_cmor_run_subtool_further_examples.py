@@ -4,6 +4,7 @@ expanded set of tests for fremor run focus on cases beyond test_cmor_run_subtool
 
 from datetime import date
 import glob
+import json
 import os
 from pathlib import Path
 import shutil
@@ -12,6 +13,7 @@ import subprocess
 import pytest
 
 from fremorizer import cmor_run_subtool
+from fremorizer.tests.conftest import _CMIP6_EXP_CONFIG_DATA
 
 
 # global consts for these tests, with no/trivial impact on the results
@@ -185,6 +187,4 @@ def test_exp_config_cleanup():
     session-scoped conftest fixture — so we rewrite it from the canonical
     fixture data instead of running ``git restore``.
     '''
-    import json  # pylint: disable=import-outside-toplevel
-    from fremorizer.tests.conftest import _CMIP6_EXP_CONFIG_DATA  # pylint: disable=import-outside-toplevel
     Path(EXP_CONFIG_DEFAULT).write_text(json.dumps(_CMIP6_EXP_CONFIG_DATA, indent=4))
