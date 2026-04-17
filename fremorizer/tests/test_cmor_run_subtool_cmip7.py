@@ -115,7 +115,6 @@ def test_setup_cmip7_cmor_table_repo():
 # ---------------------------------------------------------------------------
 # CMIP7 case 1: basic CMORization run
 # ---------------------------------------------------------------------------
-@pytest.mark.skip(reason='CMIP7 test not yet enabled')
 def test_setup_fre_cmor_run_subtool_cmip7(capfd):
     '''
     The routine generates a netCDF file from an ascii (cdl) file. It also checks for a ncgen
