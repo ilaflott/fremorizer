@@ -259,13 +259,18 @@ def test_fre_cmor_run_subtool_cmip7_case2_output_compare_data(capfd):
         _assert_data_matches(ds_in, ds_out)
     _out, _err = capfd.readouterr()
 
-@pytest.mark.skip(reason='CMIP7 test not yet enabled')
 def test_fre_cmor_run_subtool_cmip7_case2_output_compare_metadata(capfd):
     ''' I/O metadata-only comparison of CMIP7 test case2 '''
+    print(f'FULL_OUTPUTFILE={FULL_OUTPUTFILE}')
     print(f'FULL_INPUTFILE_DIFF={FULL_INPUTFILE_DIFF}')
 
-    assert Path(FULL_INPUTFILE_DIFF).exists(), \
-        f'Input file not found: {FULL_INPUTFILE_DIFF}'
+    with netCDF4.Dataset(FULL_INPUTFILE_DIFF) as ds_in, \
+         netCDF4.Dataset(FULL_OUTPUTFILE) as ds_out:
+        # CMOR processing should add/change global attributes
+        assert set(ds_in.ncattrs()) != set(ds_out.ncattrs()), \
+            "expected global attributes to differ between input and CMOR output"
+
+        _assert_metadata_matches(ds_in, ds_out)
     _out, _err = capfd.readouterr()
 
 
