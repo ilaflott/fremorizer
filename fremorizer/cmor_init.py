@@ -137,7 +137,7 @@ def _cmip7_exp_config_template():
         "branch_time_in_parent": 0.0,
         "calendar": "",
         "grid": "PLACEHOLD",
-        "grid_label": "g99",
+        "grid_label": "g999",
         "frequency": "",
         "region": "",
         "nominal_resolution": "",
