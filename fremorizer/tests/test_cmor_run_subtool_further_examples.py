@@ -1,190 +1,261 @@
 '''
-expanded set of tests for fremor run focus on cases beyond test_cmor_run_subtool.py
+Expanded set of tests for fremor run — cases beyond test_cmor_run_subtool.py.
+
+These tests exercise cmor_run_subtool against a variety of variables, tables,
+and grid labels drawn from a mock pp-archive.
+
+.. tip:: pytest temp directories
+   By default pytest removes temp directories after the session. To keep
+   them around for debugging, run::
+
+       pytest --basetemp=/tmp/fremorizer-debug -k test_case_cmip6 -x
+
+   Output files will then persist under ``/tmp/fremorizer-debug``.
 '''
 
 from datetime import date
 import glob
-import json
-import os
 from pathlib import Path
-import shutil
-import subprocess
 
 import pytest
 
 from fremorizer import cmor_run_subtool
-from fremorizer.tests.conftest import _CMIP6_EXP_CONFIG_DATA
+from fremorizer.tests.conftest import ncgen
 
 
-# global consts for these tests, with no/trivial impact on the results
-ROOTDIR='fremorizer/tests/test_files'
-CMORBITE_VARLIST=f'{ROOTDIR}/CMORbite_var_list.json'
+# ── path constants ──────────────────────────────────────────────────────────
+ROOTDIR = 'fremorizer/tests/test_files'
+CMORBITE_VARLIST = f'{ROOTDIR}/CMORbite_var_list.json'
 
-# cmip6 variable table(s)
-CMIP6_TABLE_REPO_PATH = \
-    f'{ROOTDIR}/cmip6-cmor-tables'
+# cmip6 / cmip7 table repos
+CMIP6_TABLE_REPO_PATH = f'{ROOTDIR}/cmip6-cmor-tables'
+CMIP7_TABLE_REPO_PATH = f'{ROOTDIR}/cmip7-cmor-tables'
 
-# outputs
-OUTDIR = f'{ROOTDIR}/outdir_ppan_only'
-TMPDIR = f'{OUTDIR}/tmp'
+# experiment configs (materialised by conftest._write_exp_configs)
+EXP_CONFIG_CMIP6 = f'{ROOTDIR}/CMOR_input_example.json'
+EXP_CONFIG_CMIP7 = f'{ROOTDIR}/CMOR_CMIP7_input_example.json'
 
 # determined by cmor_run_subtool
 YYYYMMDD = date.today().strftime('%Y%m%d')
-CMOR_CREATES_DIR_BASE = \
+
+# mock-archive base paths
+MOCK_ARCHIVE_ROOT = f'{ROOTDIR}/ascii_files/mock_archive'
+ESM4_DECK_PP_DIR = (
+    'cm6/ESM4/DECK/ESM4_historical_D1/gfdl.ncrc4-intel16-prod-openmp/pp'
+)
+ESM4_DEV_PP_DIR = (
+    'USER/CMIP7/ESM4/DEV/ESM4.5v01_om5b04_piC'
+    '/gfdl.ncrc5-intel23-prod-openmp/pp'
+)
+
+# CMIP6 output dir structure
+CMOR_CREATES_DIR_BASE_CMIP6 = (
     'CMIP6/CMIP6/ISMIP6/PCMDI/PCMDI-test-1-0/piControl-withism/r3i1p1f1'
+)
 
-# this file exists basically for users to specify their own information to append to the netcdf file
-# i.e., it fills in FOO/BAR/BAZ style values, and what they are currently is totally irrelevant
-EXP_CONFIG_DEFAULT=f'{ROOTDIR}/CMOR_input_example.json' # this likely is not sufficient
+# CMIP7 output dir structure
+# (activity_id/source_id/experiment_id/member_id/variable_id/branding_suffix/grid_label)
+CMOR_CREATES_DIR_BASE_CMIP7 = (
+    'CMIP/DUMMY-MODEL/historical/r3i1p1f3'
+)
 
-CLEANUP_AFTER_EVERY_TEST = False
 
-def _cleanup():
-    # clean up from previous tests
-    #time.sleep(60) # busy disk issue? possible non-closing netcdf file problem in code
-    print(OUTDIR)
-    if Path(f'{OUTDIR}').exists():
-        try:
-            shutil.rmtree(f'{OUTDIR}')
-        except OSError:
-            #time.sleep(60)
-            shutil.rmtree(f'{OUTDIR}')
-    assert not Path(f'{OUTDIR}').exists()
+# ── helper: convert CDLs to NC in a test directory ─────────────────────────
+def _ncgen_for_case(testfile_dir, opt_var_name):
+    '''Convert the CDL file(s) for *opt_var_name* to NetCDF-4 inside *testfile_dir*.
 
-MOCK_ARCHIVE_ROOT='fremorizer/tests/test_files/ascii_files/mock_archive'
-ESM4_DECK_PP_DIR='cm6/ESM4/DECK/ESM4_historical_D1/gfdl.ncrc4-intel16-prod-openmp/pp'
-ESM4_DEV_PP_DIR='USER/CMIP7/ESM4/DEV/ESM4.5v01_om5b04_piC/gfdl.ncrc5-intel23-prod-openmp/pp'
-@pytest.mark.parametrize( "testfile_dir,table,opt_var_name,grid_label,start,calendar",
-  [
-    pytest.param(f'{MOCK_ARCHIVE_ROOT}/{ESM4_DECK_PP_DIR}/atmos_plev39_cmip/ts/monthly/5yr/zonavg/',
-                  'AERmonZ', 'ta',        'gr1','1850','noleap', id='AERmonZ_ta_gr1' ),
-    pytest.param(f'{MOCK_ARCHIVE_ROOT}/{ESM4_DECK_PP_DIR}/atmos_scalar/ts/monthly/5yr/',
-                  'Amon',    'ch4global', 'gr', '1850','noleap', id='Amon_ch4global_gr' ),
-    pytest.param(f'{MOCK_ARCHIVE_ROOT}/{ESM4_DECK_PP_DIR}/LUmip_refined/ts/monthly/5yr/',
-                  'Emon',    'gppLut',    'gr1','1850','noleap', id='Emon_gppLut_gr1' ),
-    pytest.param(f'{MOCK_ARCHIVE_ROOT}/{ESM4_DECK_PP_DIR}/atmos_level_cmip/ts/monthly/5yr/',
-                  'Amon',    'cl',        'gr1','1850','noleap', id='Amon_cl_gr1' ),
-    pytest.param(f'{MOCK_ARCHIVE_ROOT}/{ESM4_DECK_PP_DIR}/atmos_level_cmip/ts/monthly/5yr/',
-                  'Amon',    'mc',        'gr1','1850','noleap', id='Amon_mc_gr1' ),
-    pytest.param(f'{MOCK_ARCHIVE_ROOT}/{ESM4_DEV_PP_DIR}/ocean_monthly_z_1x1deg/ts/monthly/5yr/',
-                  'Omon',    'so',        'gr', '0001','noleap', id='Omon_so_gr' ),
-    pytest.param(f'{MOCK_ARCHIVE_ROOT}/{ESM4_DEV_PP_DIR}/ocean_monthly/ts/monthly/5yr/',
-                  'Omon',    'sos',       'gn', '0001','noleap', id='Omon_sos_gn' ),
-    pytest.param(f'{MOCK_ARCHIVE_ROOT}/{ESM4_DEV_PP_DIR}/land/ts/monthly/5yr/',
-                  'Lmon',    'lai',       'gr1','0001','noleap', id='Lmon_lai_gr1' ),
-  ] )
-
-def test_case_function(testfile_dir,table,opt_var_name,grid_label,start,calendar,monkeypatch):
+    Returns the path to the primary NC file. Also generates ancillary files
+    (e.g. ``ps.nc`` for ``cl`` / ``mc``, ``ocean_monthly.static.nc`` for native
+    ocean grid variables).
     '''
-    Should be iterating over the test dictionary
-    '''
+    cdl_files = glob.glob(f'{testfile_dir}*.{opt_var_name}.cdl')
+    assert len(cdl_files) >= 1, (
+        f'no CDL file found for variable {opt_var_name} in {testfile_dir}'
+    )
+    cdl_file = cdl_files[0]
+    nc_file = cdl_file.replace('.cdl', '.nc')
+    ncgen(cdl_file, nc_file)
 
-    # for native-grid ocean tests, prevent the gold statics lookup from finding
-    # /archive files so the test uses its own locally-generated statics file
+    # ancillary files required by specific variables
+    if opt_var_name in ('cl', 'mc'):
+        ps_cdl = cdl_file.replace(f'{opt_var_name}.cdl', 'ps.cdl')
+        assert Path(ps_cdl).exists(), f'ps CDL not found: {ps_cdl}'
+        ncgen(ps_cdl, ps_cdl.replace('.cdl', '.nc'))
+
+    elif opt_var_name == 'sos':
+        static_cdl = testfile_dir.replace(
+            'ts/monthly/5yr/', 'ocean_monthly.static.cdl'
+        )
+        if Path(static_cdl).exists():
+            ncgen(static_cdl, static_cdl.replace('.cdl', '.nc'))
+
+    return nc_file
+
+
+# ── CMIP6 parametrized tests ───────────────────────────────────────────────
+@pytest.mark.parametrize(
+    'testfile_dir,table,opt_var_name,grid_label,start,calendar',
+    [
+        pytest.param(
+            f'{MOCK_ARCHIVE_ROOT}/{ESM4_DECK_PP_DIR}'
+            '/atmos_plev39_cmip/ts/monthly/5yr/zonavg/',
+            'AERmonZ', 'ta', 'gr1', '1850', 'noleap',
+            id='AERmonZ_ta_gr1',
+        ),
+        pytest.param(
+            f'{MOCK_ARCHIVE_ROOT}/{ESM4_DECK_PP_DIR}'
+            '/atmos_scalar/ts/monthly/5yr/',
+            'Amon', 'ch4global', 'gr', '1850', 'noleap',
+            id='Amon_ch4global_gr',
+        ),
+        pytest.param(
+            f'{MOCK_ARCHIVE_ROOT}/{ESM4_DECK_PP_DIR}'
+            '/LUmip_refined/ts/monthly/5yr/',
+            'Emon', 'gppLut', 'gr1', '1850', 'noleap',
+            id='Emon_gppLut_gr1',
+        ),
+        pytest.param(
+            f'{MOCK_ARCHIVE_ROOT}/{ESM4_DECK_PP_DIR}'
+            '/atmos_level_cmip/ts/monthly/5yr/',
+            'Amon', 'cl', 'gr1', '1850', 'noleap',
+            id='Amon_cl_gr1',
+        ),
+        pytest.param(
+            f'{MOCK_ARCHIVE_ROOT}/{ESM4_DECK_PP_DIR}'
+            '/atmos_level_cmip/ts/monthly/5yr/',
+            'Amon', 'mc', 'gr1', '1850', 'noleap',
+            id='Amon_mc_gr1',
+        ),
+        pytest.param(
+            f'{MOCK_ARCHIVE_ROOT}/{ESM4_DEV_PP_DIR}'
+            '/ocean_monthly_z_1x1deg/ts/monthly/5yr/',
+            'Omon', 'so', 'gr', '0001', 'noleap',
+            id='Omon_so_gr',
+        ),
+        pytest.param(
+            f'{MOCK_ARCHIVE_ROOT}/{ESM4_DEV_PP_DIR}'
+            '/ocean_monthly/ts/monthly/5yr/',
+            'Omon', 'sos', 'gn', '0001', 'noleap',
+            id='Omon_sos_gn',
+        ),
+        pytest.param(
+            f'{MOCK_ARCHIVE_ROOT}/{ESM4_DEV_PP_DIR}'
+            '/land/ts/monthly/5yr/',
+            'Lmon', 'lai', 'gr1', '0001', 'noleap',
+            id='Lmon_lai_gr1',
+        ),
+    ],
+)
+def test_case_cmip6(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    testfile_dir, table, opt_var_name, grid_label, start, calendar,
+    tmp_path, monkeypatch,
+):
+    '''Run cmor_run_subtool for a single CMIP6 variable and assert output exists.'''
+    # native-grid ocean tests: prevent gold statics lookup from finding /archive files
     if grid_label == 'gn':
         monkeypatch.setattr(
-            'fremorizer.cmor_mixer.find_gold_ocean_statics_file', lambda **kw: None)
-
-    # define inputs to the cmor run tool
-    indir = testfile_dir
-    table_file = f'{CMIP6_TABLE_REPO_PATH}/Tables/CMIP6_{table}.json'
-
-    # execute the test
-    try:
-        cdl_input_files=glob.glob(indir+'*.'+opt_var_name+'.cdl')
-        assert len(cdl_input_files)>=1
-
-        cdl_input_file=cdl_input_files[0]
-        assert Path(cdl_input_file).exists()
-
-        nc_input_file=cdl_input_file.replace('.cdl','.nc')
-        if Path(nc_input_file).exists():
-            Path(nc_input_file).unlink()
-        subprocess.run(['ncgen3','-k','netCDF-4','-o', nc_input_file, cdl_input_file],
-                       check=True)
-        assert Path(nc_input_file).exists()
-
-        # exception: these files need a ps file to be around, so extra ncgen step for these:
-        if opt_var_name in [ 'cl', 'mc' ]:
-            cdl_input_ps_file = cdl_input_file.replace( opt_var_name+'.cdl', 'ps.cdl')
-            assert Path(cdl_input_ps_file).exists()
-
-            nc_input_ps_file  = cdl_input_ps_file.replace('.cdl','.nc')
-            if Path(nc_input_ps_file).exists():
-                Path(nc_input_ps_file).unlink()
-            subprocess.run(['ncgen3','-k','netCDF-4','-o', nc_input_ps_file, cdl_input_ps_file],
-                           check=True)
-            assert Path(nc_input_ps_file).exists()
-
-        elif opt_var_name == 'sos':
-            cdl_ocn_statics_file=testfile_dir.replace('ts/monthly/5yr/','ocean_monthly.static.cdl')
-            assert Path(cdl_ocn_statics_file).exists()
-
-            nc_ocn_statics_file=cdl_ocn_statics_file.replace('.cdl','.nc')
-            if Path(nc_ocn_statics_file).exists():
-                Path(nc_ocn_statics_file).unlink()
-            subprocess.run(['ncgen3','-k','netCDF-4','-o', nc_ocn_statics_file, cdl_ocn_statics_file],
-                           check=True)
-            assert Path(nc_ocn_statics_file).exists()
-
-        ##assert False
-        ## Debug, please keep. -Ian
-        #print(
-        #f'fre -vv cmor run \\\n'
-        #f'    -d {indir} \\\n'
-        #f'    -l {CMORBITE_VARLIST} \\\n'
-        #f'    -r {table_file} \\\n'
-        #f'    -p {EXP_CONFIG_DEFAULT} \\\n'
-        #f'    -o {OUTDIR} \\\n'
-        #f'    --run_one \\\n'
-        #f'    -v {opt_var_name} \\\n'
-        #f'    --grid_desc \'FOO_PLACEHOLDER\' \\\n'
-        #f'    -g {grid_label} \\\n'
-        #f'    --nom_res \'10000 km\' \\\n'
-        #f'    --start {start} \\\n'
-        #f'    --calendar {calendar}\n'
-        #f'')
-        #assert False
-        cmor_run_subtool(
-            indir = indir,
-            json_var_list = CMORBITE_VARLIST,
-            json_table_config = table_file,
-            json_exp_config = EXP_CONFIG_DEFAULT,
-            outdir = OUTDIR,
-            run_one_mode = True,
-            opt_var_name = opt_var_name,
-            grid = 'FOO_PLACEHOLDER',
-            grid_label = grid_label,
-            nom_res = '10000 km' ,# placeholder
-            start = start,
-            calendar_type=calendar
+            'fremorizer.cmor_mixer.find_gold_ocean_statics_file',
+            lambda **kw: None,
         )
-        #assert False
-        some_return = 0
-    except Exception as exc:
-        raise Exception(f'exception caught: exc=\n{exc}') from exc
 
-    # outputs that should be created
-    cmor_output_dir = f'{OUTDIR}/{CMOR_CREATES_DIR_BASE}/{table}/{opt_var_name}/{grid_label}/v{YYYYMMDD}'
-    cmor_output_file_glob = f'{cmor_output_dir}/' + \
-        f'{opt_var_name}_{table}_PCMDI-test-1-0_piControl-withism_r3i1p1f1_{grid_label}_??????-??????.nc'
-    cmor_output_file = glob.glob( cmor_output_file_glob )[0]
+    _ncgen_for_case(testfile_dir, opt_var_name)
 
-    # success criteria
-    assert all( [ some_return == 0,
-                  Path(cmor_output_dir).exists(),
-                  Path(cmor_output_file).exists() ] )
+    table_file = f'{CMIP6_TABLE_REPO_PATH}/Tables/CMIP6_{table}.json'
+    outdir = str(tmp_path / 'outdir')
 
-    if CLEANUP_AFTER_EVERY_TEST:
-        _cleanup()
+    cmor_run_subtool(
+        indir=testfile_dir,
+        json_var_list=CMORBITE_VARLIST,
+        json_table_config=table_file,
+        json_exp_config=EXP_CONFIG_CMIP6,
+        outdir=outdir,
+        run_one_mode=True,
+        opt_var_name=opt_var_name,
+        grid='FOO_PLACEHOLDER',
+        grid_label=grid_label,
+        nom_res='10000 km',
+        start=start,
+        calendar_type=calendar,
+    )
 
-def test_exp_config_cleanup():
-    '''
-    Restores the CMIP6 experiment config to its pristine state after tests
-    that mutate it in-place (e.g. grid / calendar updates).
+    cmor_output_dir = (
+        f'{outdir}/{CMOR_CREATES_DIR_BASE_CMIP6}'
+        f'/{table}/{opt_var_name}/{grid_label}/v{YYYYMMDD}'
+    )
+    cmor_output_glob = (
+        f'{cmor_output_dir}/{opt_var_name}_{table}_PCMDI-test-1-0'
+        f'_piControl-withism_r3i1p1f1_{grid_label}_??????-??????.nc'
+    )
+    cmor_output_files = glob.glob(cmor_output_glob)
+    assert len(cmor_output_files) >= 1, (
+        f'no CMOR output found matching {cmor_output_glob}'
+    )
+    assert Path(cmor_output_files[0]).exists()
 
-    The config is no longer tracked by git — it is materialised by a
-    session-scoped conftest fixture — so we rewrite it from the canonical
-    fixture data instead of running ``git restore``.
-    '''
-    Path(EXP_CONFIG_DEFAULT).write_text(json.dumps(_CMIP6_EXP_CONFIG_DATA, indent=4))
+
+# ── CMIP7 parametrized tests ──────────────────────────────────────────────
+@pytest.mark.parametrize(
+    'testfile_dir,table,opt_var_name,grid_label,start,calendar',
+    [
+        pytest.param(
+            f'{MOCK_ARCHIVE_ROOT}/{ESM4_DEV_PP_DIR}'
+            '/ocean_monthly_z_1x1deg/ts/monthly/5yr/',
+            'CMIP7_ocean', 'so', 'gr', '0001', 'noleap',
+            id='ocean_so_gr',
+        ),
+        pytest.param(
+            f'{MOCK_ARCHIVE_ROOT}/{ESM4_DEV_PP_DIR}'
+            '/ocean_monthly/ts/monthly/5yr/',
+            'CMIP7_ocean', 'sos', 'gn', '0001', 'noleap',
+            id='ocean_sos_gn',
+        ),
+        pytest.param(
+            f'{MOCK_ARCHIVE_ROOT}/{ESM4_DEV_PP_DIR}'
+            '/land/ts/monthly/5yr/',
+            'CMIP7_land', 'lai', 'gr1', '0001', 'noleap',
+            id='land_lai_gr1',
+        ),
+    ],
+)
+@pytest.mark.skip(reason='CMIP7 further_examples not yet enabled')
+def test_case_cmip7(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    testfile_dir, table, opt_var_name, grid_label, start, calendar,
+    tmp_path, monkeypatch,
+):
+    '''Run cmor_run_subtool for a single CMIP7 variable and assert output exists.'''
+    if grid_label == 'gn':
+        monkeypatch.setattr(
+            'fremorizer.cmor_mixer.find_gold_ocean_statics_file',
+            lambda **kw: None,
+        )
+
+    _ncgen_for_case(testfile_dir, opt_var_name)
+
+    table_file = f'{CMIP7_TABLE_REPO_PATH}/tables/{table}.json'
+    outdir = str(tmp_path / 'outdir')
+
+    cmor_run_subtool(
+        indir=testfile_dir,
+        json_var_list=CMORBITE_VARLIST,
+        json_table_config=table_file,
+        json_exp_config=EXP_CONFIG_CMIP7,
+        outdir=outdir,
+        run_one_mode=True,
+        opt_var_name=opt_var_name,
+        grid='FOO_PLACEHOLDER',
+        grid_label=grid_label,
+        nom_res='10000 km',
+        start=start,
+        calendar_type=calendar,
+    )
+
+    cmor_output_dir = (
+        f'{outdir}/{CMOR_CREATES_DIR_BASE_CMIP7}'
+        f'/{opt_var_name}'
+    )
+    cmor_output_glob = f'{cmor_output_dir}/*{opt_var_name}*{grid_label}*.nc'
+    cmor_output_files = glob.glob(cmor_output_glob)
+    assert len(cmor_output_files) >= 1, (
+        f'no CMOR output found matching {cmor_output_glob}'
+    )
+    assert Path(cmor_output_files[0]).exists()

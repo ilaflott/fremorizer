@@ -181,9 +181,18 @@ def cmip7_exp_config(tmp_path):
 
 
 # ── ncgen helper ────────────────────────────────────────────────────────────
-def _ncgen(cdl_name, nc_path):
-    """Run ncgen3 to convert a CDL file into a NetCDF-4 file."""
-    cdl_path = ROOTDIR / 'reduced_ascii_files' / cdl_name
+def ncgen(cdl_path, nc_path):
+    """Run ncgen3 to convert a CDL file into a NetCDF-4 file.
+
+    Parameters
+    ----------
+    cdl_path : str or Path
+        Full path to the CDL source file.
+    nc_path : str or Path
+        Full path where the NetCDF-4 file will be written.
+    """
+    cdl_path = Path(cdl_path)
+    nc_path = Path(nc_path)
     assert cdl_path.exists(), f'CDL file not found: {cdl_path}'
 
     if nc_path.exists():
@@ -194,6 +203,11 @@ def _ncgen(cdl_name, nc_path):
         check=True,
     )
     assert nc_path.exists(), f'ncgen3 failed to create {nc_path}'
+
+
+def _ncgen(cdl_name, nc_path):
+    """Run ncgen3 for a CDL file under ``ROOTDIR/reduced_ascii_files``."""
+    ncgen(ROOTDIR / 'reduced_ascii_files' / cdl_name, nc_path)
 
 
 # ── session-scoped fixtures ─────────────────────────────────────────────────
