@@ -2,7 +2,7 @@
 tests for fremorizer.cmor_yamler.cmor_yaml_subtool
 
 Covers:
-  - full end-to-end run (dry_run_mode=False) via mocked consolidate_yamls
+  - full end-to-end run (dry_run_mode=False) via mocked load_model_yaml
   - every documented exception path in the function
 '''
 
@@ -41,7 +41,7 @@ def _build_cmor_dict(*, pp_dir, table_dir, outdir, exp_config,
                      chunk='P5Y', data_series_type='ts',
                      gridding=None, start='1993', stop='1993',
                      calendar_type='julian'):
-    '''Build the dictionary that consolidate_yamls would return.'''
+    '''Build the dictionary that load_model_yaml would return.'''
     if gridding is None:
         gridding = {
             'grid_label': GRID_LABEL,
@@ -127,13 +127,13 @@ def yamler_env(tmp_path):
 # end-to-end: dry_run_mode=False
 # ================================================================
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_cmor_yaml_subtool_dry_run_false(mock_consolidate, yamler_env): # pylint: disable=redefined-outer-name
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_cmor_yaml_subtool_dry_run_false(mock_load_model, yamler_env): # pylint: disable=redefined-outer-name
     '''
     Full end-to-end: cmor_yaml_subtool with dry_run_mode=False should
     call cmor_run_subtool and produce at least one CMOR-ised .nc file.
     '''
-    mock_consolidate.return_value = _build_cmor_dict( pp_dir=yamler_env['pp_dir'],
+    mock_load_model.return_value = _build_cmor_dict( pp_dir=yamler_env['pp_dir'],
                                                       table_dir=yamler_env['table_dir'],
                                                       outdir=yamler_env['outdir'],
                                                       exp_config=yamler_env['exp_config'],
@@ -170,8 +170,8 @@ def test_yamlfile_does_not_exist():
             dry_run_mode=True)
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_pp_dir_does_not_exist(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_pp_dir_does_not_exist(mock_load_model, tmp_path):
     ''' FileNotFoundError when pp_dir does not exist '''
     dummy_yaml = tmp_path / 'model.yaml'
     dummy_yaml.write_text('placeholder')
@@ -180,7 +180,7 @@ def test_pp_dir_does_not_exist(mock_consolidate, tmp_path):
     outdir = tmp_path / 'out'
     outdir.mkdir()
 
-    mock_consolidate.return_value = _build_cmor_dict(
+    mock_load_model.return_value = _build_cmor_dict(
         pp_dir='/no/such/pp_dir',
         table_dir=CMIP6_TABLE_DIR,
         outdir=str(outdir),
@@ -195,8 +195,8 @@ def test_pp_dir_does_not_exist(mock_consolidate, tmp_path):
             dry_run_mode=True)
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_table_dir_does_not_exist(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_table_dir_does_not_exist(mock_load_model, tmp_path):
     ''' FileNotFoundError when cmip_cmor_table_dir does not exist '''
     dummy_yaml = tmp_path / 'model.yaml'
     dummy_yaml.write_text('placeholder')
@@ -207,7 +207,7 @@ def test_table_dir_does_not_exist(mock_consolidate, tmp_path):
     outdir = tmp_path / 'out'
     outdir.mkdir()
 
-    mock_consolidate.return_value = _build_cmor_dict(
+    mock_load_model.return_value = _build_cmor_dict(
         pp_dir=str(pp_dir),
         table_dir='/no/such/table_dir',
         outdir=str(outdir),
@@ -222,8 +222,8 @@ def test_table_dir_does_not_exist(mock_consolidate, tmp_path):
             dry_run_mode=True)
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_exp_json_does_not_exist(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_exp_json_does_not_exist(mock_load_model, tmp_path):
     ''' FileNotFoundError when exp_json path does not exist '''
     dummy_yaml = tmp_path / 'model.yaml'
     dummy_yaml.write_text('placeholder')
@@ -232,7 +232,7 @@ def test_exp_json_does_not_exist(mock_consolidate, tmp_path):
     outdir = tmp_path / 'out'
     outdir.mkdir()
 
-    mock_consolidate.return_value = _build_cmor_dict(
+    mock_load_model.return_value = _build_cmor_dict(
         pp_dir=str(pp_dir),
         table_dir=CMIP6_TABLE_DIR,
         outdir=str(outdir),
@@ -247,8 +247,8 @@ def test_exp_json_does_not_exist(mock_consolidate, tmp_path):
             dry_run_mode=True)
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_mip_table_file_does_not_exist(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_mip_table_file_does_not_exist(mock_load_model, tmp_path):
     ''' FileNotFoundError when the derived json_mip_table_config does not exist '''
     dummy_yaml = tmp_path / 'model.yaml'
     dummy_yaml.write_text('placeholder')
@@ -260,7 +260,7 @@ def test_mip_table_file_does_not_exist(mock_consolidate, tmp_path):
     outdir.mkdir()
 
     # table_dir exists but references a table_name that has no JSON file
-    mock_consolidate.return_value = _build_cmor_dict(
+    mock_load_model.return_value = _build_cmor_dict(
         pp_dir=str(pp_dir),
         table_dir=CMIP6_TABLE_DIR,
         outdir=str(outdir),
@@ -276,8 +276,8 @@ def test_mip_table_file_does_not_exist(mock_consolidate, tmp_path):
             dry_run_mode=True)
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_cmip7_freq_none_raises(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_cmip7_freq_none_raises(mock_load_model, tmp_path):
     ''' ValueError when mip_era=CMIP7 and freq is None '''
     dummy_yaml = tmp_path / 'model.yaml'
     dummy_yaml.write_text('placeholder')
@@ -290,7 +290,7 @@ def test_cmip7_freq_none_raises(mock_consolidate, tmp_path):
     # need a table_dir that has a CMIP7_Omon.json — use the cmip7 tables
     cmip7_table_dir = f'{ROOTDIR}/cmip7-cmor-tables/tables'
 
-    mock_consolidate.return_value = _build_cmor_dict(
+    mock_load_model.return_value = _build_cmor_dict(
         pp_dir=str(pp_dir),
         table_dir=cmip7_table_dir,
         outdir=str(outdir),
@@ -308,8 +308,8 @@ def test_cmip7_freq_none_raises(mock_consolidate, tmp_path):
             dry_run_mode=True)
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_cmip6_freq_none_no_derivation_raises(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_cmip6_freq_none_no_derivation_raises(mock_load_model, tmp_path):
     '''
     ValueError when mip_era=CMIP6, freq is None, and the MIP table
     frequency cannot be derived (e.g. fx table).
@@ -333,7 +333,7 @@ def test_cmip6_freq_none_no_derivation_raises(mock_consolidate, tmp_path):
         }
     }))
 
-    mock_consolidate.return_value = _build_cmor_dict(
+    mock_load_model.return_value = _build_cmor_dict(
         pp_dir=str(pp_dir),
         table_dir=str(fake_table_dir),
         outdir=str(outdir),
@@ -351,8 +351,8 @@ def test_cmip6_freq_none_no_derivation_raises(mock_consolidate, tmp_path):
             dry_run_mode=True)
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_cmip6_freq_none_derivation_exception_caught(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_cmip6_freq_none_derivation_exception_caught(mock_load_model, tmp_path):
     '''
     When mip_era=CMIP6, freq is None, and get_bronx_freq_from_mip_table
     raises a KeyError (e.g. the MIP table JSON has no variable_entry key),
@@ -378,7 +378,7 @@ def test_cmip6_freq_none_derivation_exception_caught(mock_consolidate, tmp_path)
         'Header': {'table_id': 'Table FakeBad'}
     }))
 
-    mock_consolidate.return_value = _build_cmor_dict(
+    mock_load_model.return_value = _build_cmor_dict(
         pp_dir=str(pp_dir),
         table_dir=str(fake_table_dir),
         outdir=str(outdir),
@@ -396,8 +396,8 @@ def test_cmip6_freq_none_derivation_exception_caught(mock_consolidate, tmp_path)
             dry_run_mode=True)
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_gridding_dict_has_none_value_raises(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_gridding_dict_has_none_value_raises(mock_load_model, tmp_path):
     ''' ValueError when a gridding field is None '''
     dummy_yaml = tmp_path / 'model.yaml'
     dummy_yaml.write_text('placeholder')
@@ -408,7 +408,7 @@ def test_gridding_dict_has_none_value_raises(mock_consolidate, tmp_path):
     outdir = tmp_path / 'out'
     outdir.mkdir()
 
-    mock_consolidate.return_value = _build_cmor_dict(
+    mock_load_model.return_value = _build_cmor_dict(
         pp_dir=str(pp_dir),
         table_dir=CMIP6_TABLE_DIR,
         outdir=str(outdir),
@@ -428,8 +428,8 @@ def test_gridding_dict_has_none_value_raises(mock_consolidate, tmp_path):
             dry_run_mode=True)
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_outdir_creation_when_missing(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_outdir_creation_when_missing(mock_load_model, tmp_path):
     '''
     When cmorized_outdir does not exist, the function should create it
     (rather than raising).  Verify with a dry-run so we only test the
@@ -443,7 +443,7 @@ def test_outdir_creation_when_missing(mock_consolidate, tmp_path):
     pp_dir.mkdir()
     outdir = tmp_path / 'brand_new_outdir'   # does NOT exist yet
 
-    mock_consolidate.return_value = _build_cmor_dict(
+    mock_load_model.return_value = _build_cmor_dict(
         pp_dir=str(pp_dir),
         table_dir=CMIP6_TABLE_DIR,
         outdir=str(outdir),
@@ -460,8 +460,8 @@ def test_outdir_creation_when_missing(mock_consolidate, tmp_path):
     assert outdir.is_dir()
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_outdir_creation_failure_raises_oserror(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_outdir_creation_failure_raises_oserror(mock_load_model, tmp_path):
     '''
     OSError when cmorized_outdir does not exist and Path.mkdir fails.
     Covers the except branch in the outdir-creation block.
@@ -475,7 +475,7 @@ def test_outdir_creation_failure_raises_oserror(mock_consolidate, tmp_path):
     # pick a path that does NOT exist so the mkdir branch is entered
     outdir = tmp_path / 'impossible_outdir'
 
-    mock_consolidate.return_value = _build_cmor_dict(
+    mock_load_model.return_value = _build_cmor_dict(
         pp_dir=str(pp_dir),
         table_dir=CMIP6_TABLE_DIR,
         outdir=str(outdir),
@@ -492,8 +492,8 @@ def test_outdir_creation_failure_raises_oserror(mock_consolidate, tmp_path):
                 dry_run_mode=True)
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_start_stop_calendar_missing_from_yaml(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_start_stop_calendar_missing_from_yaml(mock_load_model, tmp_path):
     '''
     When start, stop, and calendar_type are None on the CLI AND absent
     from the YAML dict, the function should log warnings and continue
@@ -520,7 +520,7 @@ def test_start_stop_calendar_missing_from_yaml(mock_consolidate, tmp_path):
     del cmor_dict['cmor']['stop']
     del cmor_dict['cmor']['calendar_type']
 
-    mock_consolidate.return_value = cmor_dict
+    mock_load_model.return_value = cmor_dict
 
     # should not raise — the warnings are logged, dry-run continues
     cmor_yaml_subtool(
@@ -532,8 +532,8 @@ def test_start_stop_calendar_missing_from_yaml(mock_consolidate, tmp_path):
         calendar_type=None)
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_cmip6_freq_none_derivation_succeeds(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_cmip6_freq_none_derivation_succeeds(mock_load_model, tmp_path):
     '''
     When mip_era=CMIP6 and freq is None, but the MIP table carries a
     derivable frequency (e.g. Omon → "mon" → "monthly"), the function
@@ -549,7 +549,7 @@ def test_cmip6_freq_none_derivation_succeeds(mock_consolidate, tmp_path):
     outdir = tmp_path / 'out'
     outdir.mkdir()
 
-    mock_consolidate.return_value = _build_cmor_dict(
+    mock_load_model.return_value = _build_cmor_dict(
         pp_dir=str(pp_dir),
         table_dir=CMIP6_TABLE_DIR,
         outdir=str(outdir),
@@ -567,8 +567,8 @@ def test_cmip6_freq_none_derivation_succeeds(mock_consolidate, tmp_path):
         dry_run_mode=True)
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_dry_run_prints_cli_call(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_dry_run_prints_cli_call(mock_load_model, tmp_path):
     '''
     dry_run_mode=True with print_cli_call=True should log the CLI
     invocation and never call cmor_run_subtool.
@@ -582,7 +582,7 @@ def test_dry_run_prints_cli_call(mock_consolidate, tmp_path):
     outdir = tmp_path / 'out'
     outdir.mkdir()
 
-    mock_consolidate.return_value = _build_cmor_dict(
+    mock_load_model.return_value = _build_cmor_dict(
         pp_dir=str(pp_dir),
         table_dir=CMIP6_TABLE_DIR,
         outdir=str(outdir),
@@ -602,8 +602,8 @@ def test_dry_run_prints_cli_call(mock_consolidate, tmp_path):
     assert len(output_nc) == 0
 
 
-@patch('fremorizer.cmor_yamler.consolidate_yamls')
-def test_dry_run_prints_python_call(mock_consolidate, tmp_path):
+@patch('fremorizer.cmor_yamler.load_model_yaml')
+def test_dry_run_prints_python_call(mock_load_model, tmp_path):
     '''
     dry_run_mode=True with print_cli_call=False should log the Python
     cmor_run_subtool(...) invocation.
@@ -617,7 +617,7 @@ def test_dry_run_prints_python_call(mock_consolidate, tmp_path):
     outdir = tmp_path / 'out'
     outdir.mkdir()
 
-    mock_consolidate.return_value = _build_cmor_dict(
+    mock_load_model.return_value = _build_cmor_dict(
         pp_dir=str(pp_dir),
         table_dir=CMIP6_TABLE_DIR,
         outdir=str(outdir),

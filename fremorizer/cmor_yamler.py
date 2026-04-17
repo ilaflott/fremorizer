@@ -3,12 +3,14 @@
 ==================================================
 
 This module powers the ``fremor yaml`` command, steering the CMORization workflow by parsing model-YAML
-files that describe target experiments and their configurations. It combines model-level and experiment-level
-configuration, parses required metadata and paths, and orchestrates calls to ``cmor_run_subtool`` for each
-target variable/component.
+files that describe target experiments and their configurations. It reads a model YAML to locate
+the experiment's CMOR YAML and grids YAML, loads them, adds name/platform/target metadata for
+pp directory resolution, and orchestrates calls to ``cmor_run_subtool`` for each target
+variable/component.
 
 Functions
 ---------
+- ``load_model_yaml(...)``
 - ``cmor_yaml_subtool(...)``
 
 .. note:: "yamler" is a portmanteau of "yaml" and "reader".
@@ -18,17 +20,121 @@ from pathlib import Path
 import pprint
 import logging
 import os
-from typing import Optional
+from typing import Optional, Dict, Any
 
-try:
-    from fre.yamltools.combine_yamls_script import consolidate_yamls
-except ImportError:
-    consolidate_yamls = None
+import yaml
+
 from .cmor_mixer import cmor_run_subtool
 from .cmor_helpers import ( check_path_existence, iso_to_bronx_chunk, #conv_mip_to_bronx_freq,
                             get_bronx_freq_from_mip_table )
 
 fre_logger = logging.getLogger(__name__)
+
+
+def _join_constructor(loader, node):
+    """Handle ``!join`` YAML tag by concatenating a sequence of scalars."""
+    seq = loader.construct_sequence(node)
+    return ''.join(str(item) for item in seq)
+
+
+def _get_yaml_loader():
+    """Return a YAML Loader that supports the ``!join`` custom tag."""
+    loader = type('Loader', (yaml.SafeLoader,), {})
+    loader.add_constructor('!join', _join_constructor)
+    return loader
+
+
+def load_model_yaml(yamlfile: str,
+                    exp_name: str,
+                    platform: str,
+                    target: str) -> Dict[str, Any]:
+    """
+    Load a model YAML, locate the experiment's CMOR YAML and grids YAML,
+    and return the resolved CMOR configuration dict with name/platform/target
+    appended for pp directory resolution.
+
+    :param yamlfile: Path to the model YAML file.
+    :type yamlfile: str
+    :param exp_name: Experiment name to look up in the model YAML.
+    :type exp_name: str
+    :param platform: Platform identifier (e.g. 'gfdl.ncrc5-intel22').
+    :type platform: str
+    :param target: Target identifier (e.g. 'prod-openmp').
+    :type target: str
+    :raises FileNotFoundError: If the model YAML or referenced files do not exist.
+    :raises ValueError: If the experiment is not found or cmor YAML is not specified.
+    :return: Dictionary with the resolved CMOR configuration.
+    :rtype: dict
+    """
+    yamlfile = os.path.expandvars(yamlfile)
+    mainyaml_dir = os.path.dirname(os.path.abspath(yamlfile))
+
+    # read model yaml as string
+    with open(yamlfile, 'r', encoding='utf-8') as f:
+        model_content = f.read()
+
+    # prepend name/platform/target as YAML anchors so they can be
+    # referenced from fre_properties or cmor yaml via *name etc.
+    yaml_header = (f'name: &name "{exp_name}"\n'
+                   f'platform: &platform "{platform}"\n'
+                   f'target: &target "{target}"\n')
+    combined = yaml_header + model_content
+
+    # load the model yaml to discover experiment paths
+    loaded_yaml = yaml.load(combined, Loader=_get_yaml_loader())  # noqa: S506
+
+    # find the experiment entry
+    experiments = loaded_yaml.get('experiments', [])
+    exp_entry = None
+    for exp in experiments:
+        if exp.get('name') == exp_name:
+            exp_entry = exp
+            break
+    if exp_entry is None:
+        raise ValueError(f"experiment '{exp_name}' not found in model yaml")
+
+    # extract cmor yaml path (relative to model yaml directory)
+    cmor_refs = exp_entry.get('cmor', [])
+    cmor_yaml_ref = cmor_refs[0] if cmor_refs else None
+    if not cmor_yaml_ref:
+        raise ValueError(f"no cmor yaml specified for experiment '{exp_name}'")
+    cmor_yaml_path = os.path.join(mainyaml_dir, cmor_yaml_ref)
+    if not Path(cmor_yaml_path).exists():
+        raise FileNotFoundError(f"cmor yaml does not exist: {cmor_yaml_path}")
+
+    # extract grids yaml path (optional, relative to model yaml directory)
+    grid_yaml_refs = exp_entry.get('grid_yaml', [])
+    grid_yaml_ref = grid_yaml_refs[0] if grid_yaml_refs else None
+
+    # append grids yaml content if present (so YAML anchors can resolve)
+    if grid_yaml_ref:
+        grid_yaml_path = os.path.join(mainyaml_dir, grid_yaml_ref)
+        if not Path(grid_yaml_path).exists():
+            raise FileNotFoundError(f"grids yaml does not exist: {grid_yaml_path}")
+        with open(grid_yaml_path, 'r', encoding='utf-8') as f:
+            combined += f.read()
+
+    # append cmor yaml content
+    with open(cmor_yaml_path, 'r', encoding='utf-8') as f:
+        combined += f.read()
+
+    # load everything together so YAML anchors from fre_properties
+    # and grids yaml resolve inside the cmor yaml
+    resolved = yaml.load(combined, Loader=_get_yaml_loader())  # noqa: S506
+
+    # extract just the cmor section and add name/platform/target for
+    # pp directory resolution
+    cmor_dict = resolved.get('cmor')
+    if cmor_dict is None:
+        raise ValueError("model + cmor yaml combination did not produce a 'cmor' section")
+
+    cmor_dict['name'] = exp_name
+    cmor_dict['platform'] = platform
+    cmor_dict['target'] = target
+
+    fre_logger.debug('load_model_yaml produced cmor dict:\n%s', pprint.pformat(cmor_dict))
+    return {'cmor': cmor_dict}
+
 
 def cmor_yaml_subtool( yamlfile: str = None,
                        exp_name: str = None,
@@ -90,15 +196,12 @@ def cmor_yaml_subtool( yamlfile: str = None,
     # ---------------------------------------------------
     # parsing the target model yaml ---------------------
     # ---------------------------------------------------
-    fre_logger.info('calling consolidate yamls to create a combined cmor-yaml dictionary')
-    if consolidate_yamls is None:
-        raise ImportError(
-            "the 'fremor yaml' command requires fre-cli's yamltools module.\n"
-            "install it with: pip install fre-cli")
-    cmor_yaml_dict = consolidate_yamls(yamlfile=yamlfile,
-                                       experiment=exp_name, platform=platform, target=target,
-                                       use="cmor", output=output)['cmor']
-    fre_logger.debug('consolidate_yamls produced the following dictionary of cmor-settings from yamls: \n%s',
+    fre_logger.info('loading model yaml to locate cmor yaml and grids yaml')
+    cmor_yaml_dict = load_model_yaml(yamlfile=yamlfile,
+                                     exp_name=exp_name,
+                                     platform=platform,
+                                     target=target)['cmor']
+    fre_logger.debug('load_model_yaml produced the following dictionary of cmor-settings from yamls: \n%s',
                      pprint.pformat(cmor_yaml_dict) )
 
     mip_era = cmor_yaml_dict['mip_era'].upper()
