@@ -1,37 +1,65 @@
 package:
   name: fremorizer
-  version: 2026.01.alpha1
+  version: '{{ environ.get("GIT_DESCRIBE_TAG", "develop") }}'
 
 source:
   path: .
 
 build:
-      script: "{{ PYTHON }} -m pip install . -vv"
-      number: 0
-      noarch: python
+  script: 
+    - {{ PYTHON }} -m pip install . -vv
+  number: 0
+  noarch: python
+
+channels:
+    - conda-forge
+    - noaa-gfdl
+
 requirements:
   host:
-    - python >=3.11
+    - python>=3.11
     - pip
     - setuptools
   run:
-    - python >=3.11
-    - cftime
-    - click
-    - cmor
-    - netcdf4
-    - numpy
+    - python>=3.11
+    - click>=8.2
+    - cmor>=3.14
+    - netcdf4>=1.7
+    - numpy>=2
     - pyyaml
+
 test:
+  requires:
+    - conda-forge::pylint
+    - conda-forge::pytest
+    - conda-forge::pytest-cov
+  source_files:
+    - fremorizer/
+  files:
+    - pylintrc
   imports:
     - fremorizer
+    - fremorizer._version
     - fremorizer.cli
-    - fremorizer.cmor_mixer
-    - fremorizer.cmor_helpers
-    - fremorizer.cmor_finder
     - fremorizer.cmor_config
+    - fremorizer.cmor_constants
+    - fremorizer.cmor_finder
+    - fremorizer.cmor_helpers
+    - fremorizer.cmor_init
+    - fremorizer.cmor_mixer
     - fremorizer.cmor_yamler
+  commands:
+    - fremor --help
+    - fremor config --help
+    - fremor find --help
+    - fremor init --help
+    - fremor run --help
+    - fremor yaml --help
+    - pytest --durations=5 --log-level DEBUG fremorizer/
+
 about:
   home: https://github.com/ilaflott/fremorizer
   license: Apache-2.0
+  license_file: LICENSE.md
   summary: Model output rewriter (CMORizer) for FRE/FMS based models
+  author: Ian Laflotte, Sergey Nikonov, Chris Blanton, and NOAA-GFDL Modeling Systems Division
