@@ -97,6 +97,12 @@ def _assert_metadata_matches(ds_in, ds_out):
         assert required_attr in ds_out.ncattrs(), \
             f"CMOR output missing required global attribute '{required_attr}'"
 
+    # CMIP7 uses 'table_info' instead of 'table_id'
+    assert 'table_info' in ds_out.ncattrs(), \
+        "CMOR output missing 'table_info' attribute (CMIP7-specific)"
+    assert 'table_id' not in ds_out.ncattrs(), \
+        "CMOR output should not have 'table_id' for CMIP7 (uses 'table_info' instead)"
+
     # science variable standard_name and long_name must be preserved
     assert ds_in.variables['sos'].standard_name == ds_out.variables['sos'].standard_name, \
         "sos standard_name differs between input and CMOR output"

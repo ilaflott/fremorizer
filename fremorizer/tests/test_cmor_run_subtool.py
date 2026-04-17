@@ -14,6 +14,7 @@ import numpy as np
 import pytest
 
 from fremorizer import cmor_run_subtool
+from fremorizer.tests.conftest import _CMIP6_EXP_CONFIG_DATA
 
 
 # where are we? we're running pytest from the base directory of this repo
@@ -378,7 +379,6 @@ def test_exp_config_cleanup():
     session-scoped conftest fixture — so we rewrite it from the canonical
     fixture data instead of running ``git restore``.
     '''
-    from fremorizer.tests.conftest import _CMIP6_EXP_CONFIG_DATA  # pylint: disable=import-outside-toplevel
     Path(EXP_CONFIG).write_text(json.dumps(_CMIP6_EXP_CONFIG_DATA, indent=4))
 
 def test_cmor_run_subtool_raise_value_error():
