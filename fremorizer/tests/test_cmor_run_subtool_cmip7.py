@@ -224,7 +224,6 @@ def test_setup_fre_cmor_run_subtool_cmip7_case2(capfd):
     assert Path(FULL_INPUTFILE_DIFF).exists()
     _out, _err = capfd.readouterr()
 
-@pytest.mark.skip(reason='CMIP7 test not yet enabled')
 def test_fre_cmor_run_subtool_cmip7_case2(capfd):
     ''' fre cmor run, CMIP7 test-use case2 '''
 
@@ -241,7 +240,9 @@ def test_fre_cmor_run_subtool_cmip7_case2(capfd):
         calendar_type = CALENDAR_TYPE
     )
 
-    assert Path(FULL_INPUTFILE_DIFF).exists()
+    # check we ran on the right input file and output was created.
+    assert all( [ Path(FULL_OUTPUTFILE).exists(),
+                  Path(FULL_INPUTFILE_DIFF).exists() ] )
     _out, _err = capfd.readouterr()
 
 @pytest.mark.skip(reason='CMIP7 test not yet enabled')
