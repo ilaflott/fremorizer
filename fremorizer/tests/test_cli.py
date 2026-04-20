@@ -335,7 +335,7 @@ def test_cli_fremor_config_case1(cli_sos_nc_file): # pylint: disable=redefined-o
     (mock_pp_dir / 'ocean' / 'ts' / 'annual').mkdir(parents=True, exist_ok=True)
 
     # symlink the test nc file into the mock tree
-    src_nc = INDIR / 'reduced_ocean_monthly_1x1deg.199301-199302.sos.nc'
+    src_nc = Path(cli_sos_nc_file)
     dst_nc = comp_ts_dir / src_nc.name
     if dst_nc.exists() or dst_nc.is_symlink():
         dst_nc.unlink()
@@ -412,16 +412,17 @@ def test_cli_fremor_varlist_opt_dne():
     assert result.exit_code == 2
 
 
-def test_cli_fremor_varlist_no_table_filter(cli_sos_nc_file, cli_sosv2_nc_file, tmp_path): # pylint: disable=redefined-outer-name
+def test_cli_fremor_varlist_no_table_filter(tmp_path, cli_sos_nc_file, cli_sosv2_nc_file): # pylint: disable=redefined-outer-name
     '''fremor varlist — no MIP table filter.
     Creates a variable list from the ocean_sos_var_file test data without a MIP table,
     so both sos and sosV2 should appear.'''
     output_varlist = tmp_path / 'test_varlist_no_filter.json'
+    assert Path(cli_sos_nc_file).parent == Path(cli_sosv2_nc_file).parent, 'something wrong with input nc files'
 
     result = runner.invoke(fremor, args=[
         "-v", "-v",
         "varlist",
-        "--dir_targ", str(INDIR),
+        "--dir_targ", str(Path(cli_sos_nc_file).parent),
         "--output_variable_list", str(output_varlist)
     ])
     assert result.exit_code == 0, f'varlist failed: {result.output}'
@@ -439,11 +440,12 @@ def test_cli_fremor_varlist_cmip6_table_filter(cli_sos_nc_file, cli_sosv2_nc_fil
     '''fremor varlist — with CMIP6 Omon MIP table filter.
     Only sos should survive; sosV2 is not in the CMIP6 Omon table.'''
     output_varlist = tmp_path / 'test_varlist_cmip6_filter.json'
+    assert Path(cli_sos_nc_file).parent == Path(cli_sosv2_nc_file).parent, 'something wrong with input nc files'
 
     result = runner.invoke(fremor, args=[
         "-v", "-v",
         "varlist",
-        "--dir_targ", str(INDIR),
+        "--dir_targ", str(Path(cli_sos_nc_file).parent),
         "--output_variable_list", str(output_varlist),
         "--mip_table", str(CMIP6_TABLE_CONFIG)
     ])
@@ -461,11 +463,12 @@ def test_cli_fremor_varlist_cmip7_table_filter(cli_sos_nc_file, cli_sosv2_nc_fil
     '''fremor varlist — with CMIP7 ocean MIP table filter.
     sos should survive (sos_tavg-u-hxy-sea splits to sos); sosV2 should not.'''
     output_varlist = tmp_path / 'test_varlist_cmip7_filter.json'
+    assert Path(cli_sos_nc_file).parent == Path(cli_sosv2_nc_file).parent, 'something wrong with input nc files'
 
     result = runner.invoke(fremor, args=[
         "-v", "-v",
         "varlist",
-        "--dir_targ", str(INDIR),
+        "--dir_targ", str(Path(cli_sos_nc_file).parent),
         "--output_variable_list", str(output_varlist),
         "--mip_table", str(CMIP7_TABLE_CONFIG)
     ])
@@ -580,7 +583,7 @@ def test_cli_fremor_run_with_logfile(cli_sos_nc_file, tmp_path): # pylint: disab
     result = runner.invoke(fremor, args=[
         '-vv', '-l', str(log_path),
         'run', '--run_one',
-        '--indir', str(INDIR),
+        '--indir', str(Path(cli_sos_nc_file).parent),
         '--varlist', str(VARLIST),
         '--table_config', str(CMIP6_TABLE_CONFIG),
         '--exp_config', str(EXP_CONFIG),
@@ -621,11 +624,12 @@ def test_cli_fremor_run_with_logfile_omission_case(cli_sos_nc_file, cli_sosv2_nc
     varlist_fd, varlist_path = tempfile.mkstemp(suffix='.json')
     with os.fdopen(varlist_fd, 'w') as f:
         json.dump(varlist_data, f)
+    assert Path(cli_sos_nc_file).parent == Path(cli_sosv2_nc_file).parent, "something wrong with input nc files"
 
     result = runner.invoke(fremor, args=[
         '-vv', '-l', str(log_path),
         'run',
-        '--indir', str(INDIR),
+        '--indir', str(Path(cli_sos_nc_file).parent),
         '--varlist', varlist_path,
         '--table_config', str(CMIP6_TABLE_CONFIG),
         '--exp_config', str(EXP_CONFIG),

@@ -10,8 +10,8 @@ import pytest
 from fremorizer.cmor_finder import make_simple_varlist
 
 
-@pytest.fixture
-def temp_netcdf_dir(tmp_path):
+@pytest.fixture(name='netcdf_dir_files')
+def temp_netcdf_dir_files(tmp_path):
     """
     Fixture to create a temporary directory with sample NetCDF files.
     """
@@ -29,8 +29,8 @@ def temp_netcdf_dir(tmp_path):
     return tmp_path
 
 
-@pytest.fixture
-def temp_netcdf_dir_single_file(tmp_path):
+@pytest.fixture(name='netcdf_dir_file')
+def temp_netcdf_dir_file(tmp_path):
     """
     Fixture to create a temporary directory with a single NetCDF file.
     """
@@ -39,23 +39,18 @@ def temp_netcdf_dir_single_file(tmp_path):
     return tmp_path
 
 
-@pytest.fixture
-def empty_dir(tmp_path):
-    """
-    Fixture to create an empty temporary directory.
-    """
-    return tmp_path
 
 
-def test_make_simple_varlist_success(temp_netcdf_dir, tmp_path):
+
+def test_make_simple_varlist_success(netcdf_dir_files):
     """
     Test successful creation of variable list from NetCDF files.
     """
     # Arrange
-    output_file = tmp_path / "varlist.json"
+    output_file = netcdf_dir_files / "varlist.json"
 
     # Act
-    result = make_simple_varlist(str(temp_netcdf_dir), str(output_file))
+    result = make_simple_varlist(str(netcdf_dir_files), str(output_file))
 
     # Assert
     assert result is not None
@@ -74,12 +69,12 @@ def test_make_simple_varlist_success(temp_netcdf_dir, tmp_path):
         assert saved_data == result
 
 
-def test_make_simple_varlist_return_value_only(temp_netcdf_dir):
+def test_make_simple_varlist_return_value_only(netcdf_dir_files):
     """
     Test make_simple_varlist with output_variable_list=None returns var_list.
     """
     # Act
-    result = make_simple_varlist(str(temp_netcdf_dir), None)
+    result = make_simple_varlist(str(netcdf_dir_files), None)
 
     # Assert
     assert result is not None
@@ -89,15 +84,15 @@ def test_make_simple_varlist_return_value_only(temp_netcdf_dir):
     assert "velocity" in result
 
 
-def test_make_simple_varlist_single_file_warning(temp_netcdf_dir_single_file, tmp_path):
+def test_make_simple_varlist_single_file_warning(netcdf_dir_file):
     """
     Test warning when only one file is found.
     """
     # Arrange
-    output_file = tmp_path / "varlist.json"
+    output_file = netcdf_dir_file / "varlist.json"
 
     # Act
-    result = make_simple_varlist(str(temp_netcdf_dir_single_file), str(output_file))
+    result = make_simple_varlist(str(netcdf_dir_file), str(output_file))
 
     # Assert
     assert result is not None
@@ -106,18 +101,18 @@ def test_make_simple_varlist_single_file_warning(temp_netcdf_dir_single_file, tm
     assert result["temp"] == "temp"
 
 
-def test_make_simple_varlist_no_files(empty_dir):
+def test_make_simple_varlist_no_files(tmp_path):
     """
     Test behavior when no NetCDF files are found in directory.
     """
     # Act
-    result = make_simple_varlist(str(empty_dir), None)
+    result = make_simple_varlist(str(tmp_path), None)
 
     # Assert - function should return None when no files found
     assert result is None
 
 
-def test_make_simple_varlist_invalid_output_path(temp_netcdf_dir):
+def test_make_simple_varlist_invalid_output_path(netcdf_dir_file):
     """
     Test OSError when output file cannot be written.
     """
@@ -126,7 +121,7 @@ def test_make_simple_varlist_invalid_output_path(temp_netcdf_dir):
 
     # Act & Assert
     with pytest.raises(OSError, match="output variable list created but cannot be written"):
-        make_simple_varlist(str(temp_netcdf_dir), invalid_output_path)
+        make_simple_varlist(str(netcdf_dir_file), invalid_output_path)
 
 
 def test_make_simple_varlist_no_matching_pattern(tmp_path):
