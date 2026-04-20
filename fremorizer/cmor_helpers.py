@@ -688,7 +688,7 @@ def conv_mip_to_bronx_freq(cmor_table_freq: str) -> Optional[str]:
     bronx_freq = cmor_to_bronx_dict.get(cmor_table_freq)
     if bronx_freq is None:
         fre_logger.warning('MIP table frequency = %s does not have a FRE-bronx equivalent', cmor_table_freq)
-    if cmor_table_freq not in cmor_to_bronx_dict.keys():
+    if cmor_table_freq not in cmor_to_bronx_dict:
         raise KeyError(f'MIP table frequency = "{cmor_table_freq}" is not a valid MIP frequency')
     return bronx_freq
 
