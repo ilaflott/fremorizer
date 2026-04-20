@@ -239,7 +239,7 @@ def test_create_tmp_dir_with_exp_config(tmp_path):
     assert Path(result, 'CMIP7/output').is_dir()
 
 
-def test_create_tmp_dir_oserror(tmp_path):
+def test_create_tmp_dir_oserror():
     ''' create_tmp_dir should raise OSError when directory creation fails '''
     # /dev/null is not a directory; we can't mkdir inside it
     with pytest.raises(OSError, match='problem creating tmp output directory'):

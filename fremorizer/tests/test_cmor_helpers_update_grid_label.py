@@ -17,7 +17,7 @@ TEST_JSON_CONTENT = {
     "other_field": "some_value"
 }
 
-@pytest.fixture
+@pytest.fixture(name='test_json_file')
 def temp_json_file(tmp_path):
     """
     Fixture to create a temporary JSON file for testing.
@@ -33,7 +33,7 @@ def temp_json_file(tmp_path):
         json.dump(TEST_JSON_CONTENT, file, indent=4)
     return json_file
 
-def test_update_grid_label_and_grid_success(temp_json_file):
+def test_update_grid_label_and_grid_success(test_json_file):
     """
     Test successful update of 'grid_label' and 'grid' fields.
     """
@@ -43,22 +43,22 @@ def test_update_grid_label_and_grid_success(temp_json_file):
     new_nom_res = "updated_nom_res"
 
     # Act
-    update_grid_and_label(temp_json_file, new_grid_label, new_grid, new_nom_res)
+    update_grid_and_label(test_json_file, new_grid_label, new_grid, new_nom_res)
 
     # Assert
-    with open(temp_json_file, "r", encoding="utf-8") as file:
+    with open(test_json_file, "r", encoding="utf-8") as file:
         data = json.load(file)
         assert data["grid"] == new_grid
         assert data["grid_label"] == new_grid_label
         assert data["nominal_resolution"] == new_nom_res
         assert data["other_field"] == "some_value"  # Ensure other fields are untouched
 
-def test_missing_nom_res_field(temp_json_file):
+def test_missing_nom_res_field(test_json_file):
     """
     Test behavior when the 'nominal_resolution' field is missing in the JSON file.
     """
     # Arrange
-    with open(temp_json_file, "r+", encoding="utf-8") as file:
+    with open(test_json_file, "r+", encoding="utf-8") as file:
         data = json.load(file)
         del data["nominal_resolution"]  # Remove the 'nominal_resolution' field
         file.seek(0)
@@ -74,14 +74,14 @@ def test_missing_nom_res_field(temp_json_file):
         KeyError,
         match='"Error updating \'nominal_resolution\'. Ensure the field exists and is modifiable."'
     ):
-        update_grid_and_label(temp_json_file, new_grid_label, new_grid, new_nom_res)
+        update_grid_and_label(test_json_file, new_grid_label, new_grid, new_nom_res)
 
-def test_missing_grid_label_field(temp_json_file):
+def test_missing_grid_label_field(test_json_file):
     """
     Test behavior when the 'grid_label' field is missing in the JSON file.
     """
     # Arrange
-    with open(temp_json_file, "r+", encoding="utf-8") as file:
+    with open(test_json_file, "r+", encoding="utf-8") as file:
         data = json.load(file)
         del data["grid_label"]  # Remove the 'grid_label' field
         file.seek(0)
@@ -94,14 +94,14 @@ def test_missing_grid_label_field(temp_json_file):
 
     # Act & Assert
     with pytest.raises(KeyError, match="Error while updating 'grid_label'"):
-        update_grid_and_label(temp_json_file, new_grid_label, new_grid, new_nom_res)
+        update_grid_and_label(test_json_file, new_grid_label, new_grid, new_nom_res)
 
-def test_missing_grid_field(temp_json_file):
+def test_missing_grid_field(test_json_file):
     """
     Test behavior when the 'grid' field is missing in the JSON file.
     """
     # Arrange
-    with open(temp_json_file, "r+", encoding="utf-8") as file:
+    with open(test_json_file, "r+", encoding="utf-8") as file:
         data = json.load(file)
         del data["grid"]  # Remove the 'grid' field
         file.seek(0)
@@ -114,7 +114,7 @@ def test_missing_grid_field(temp_json_file):
 
     # Act & Assert
     with pytest.raises(KeyError, match="Error while updating 'grid'"):
-        update_grid_and_label(temp_json_file, new_grid_label, new_grid, new_nom_res)
+        update_grid_and_label(test_json_file, new_grid_label, new_grid, new_nom_res)
 
 def test_invalid_json_file(tmp_path):
     """
