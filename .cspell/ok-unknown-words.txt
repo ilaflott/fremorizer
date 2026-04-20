@@ -65,6 +65,7 @@ autodoc
 autofunction
 automethod
 automodule
+basetemp
 bnds
 booleaness
 capfd
@@ -100,6 +101,7 @@ ierr
 ilaflott
 indir
 infolog
+inlinevar
 intercomparison
 intercomparisons
 interp
@@ -129,6 +131,7 @@ msvs
 mymodule
 mypackage
 mypy
+mylog
 ncattrs
 ncgen
 ncrc

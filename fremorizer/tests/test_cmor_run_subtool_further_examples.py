@@ -30,7 +30,7 @@ CMORBITE_VARLIST = f'{ROOTDIR}/CMORbite_var_list.json'
 # cmip6 table repo
 CMIP6_TABLE_REPO_PATH = f'{ROOTDIR}/cmip6-cmor-tables'
 
-# experiment config (materialised by conftest._write_exp_configs)
+# experiment config (materialized by conftest._write_exp_configs)
 EXP_CONFIG_CMIP6 = f'{ROOTDIR}/CMOR_input_example.json'
 
 # determined by cmor_run_subtool
