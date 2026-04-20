@@ -238,12 +238,12 @@ def run(indir, varlist, table_config, exp_config, outdir, run_one, opt_var_name,
     )
 
 
-@fremor.command()
+@fremor.command('varlist')
 @click.option("-d", "--dir_targ", type=str, required=True, help="Target directory")
 @click.option("-o", "--output_variable_list", type=str, required=True, help="Output variable list file")
 @click.option("-t", "--mip_table", type=str, required=False, default=None,
               help="Target MIP table for making variable list")
-def varlist(dir_targ, output_variable_list, mip_table):
+def varlist_(dir_targ, output_variable_list, mip_table):
     """
     Create a simple variable list from netCDF files in the target directory.
     """
