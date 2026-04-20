@@ -1,9 +1,11 @@
 """
-tests for fremorizer.cmor_run_subtool
+CMIP7-flavored tests for fremorizer.cmor_run_subtool
+
+Each test mirrors a corresponding CMIP6 test in test_cmor_run_subtool.py but
+targets the CMIP7 experiment-configuration JSON and CMIP7-format CMOR tables.
 """
 
 from datetime import date
-import json
 from pathlib import Path
 import subprocess
 import shutil
@@ -13,34 +15,24 @@ import numpy as np
 import pytest
 
 from fremorizer import cmor_run_subtool
-from fremorizer.tests.conftest import _CMIP6_EXP_CONFIG_DATA
 
 
 # where are we? we're running pytest from the base directory of this repo
 ROOTDIR = 'fremorizer/tests/test_files'
 
 # setup- cmip/cmor variable table(s)
-CMIP6_TABLE_REPO_PATH = \
-    f'{ROOTDIR}/cmip6-cmor-tables'
+CMIP7_TABLE_REPO_PATH = \
+    f'{ROOTDIR}/cmip7-cmor-tables'
 TABLE_CONFIG = \
-    f'{CMIP6_TABLE_REPO_PATH}/Tables/CMIP6_Omon.json'
-
-def test_setup_cmor_cmip_table_repo():
-    """
-    setup routine, make sure the recursively cloned tables exist
-    """
-    assert all( [ Path(CMIP6_TABLE_REPO_PATH).exists(),
-                  Path(TABLE_CONFIG).exists()
-                  ] )
+    f'{CMIP7_TABLE_REPO_PATH}/tables/CMIP7_ocean.json'
 
 # explicit inputs to tool
 GRID = 'regridded to FOO grid from native' #placeholder value
-GRID_LABEL = 'gr'
+GRID_LABEL = 'g999'
 NOM_RES = '10000 km' #placeholder value
 
 INDIR = f'{ROOTDIR}/ocean_sos_var_file'
 VARLIST = f'{ROOTDIR}/varlist'
-EXP_CONFIG = f'{ROOTDIR}/CMOR_input_example.json'
 CMIP7_EXP_CONFIG = f'{ROOTDIR}/CMOR_CMIP7_input_example.json'
 OUTDIR = f'{ROOTDIR}/outdir'
 TMPDIR = f'{OUTDIR}/tmp'
@@ -53,16 +45,20 @@ CALENDAR_TYPE = 'julian'
 
 # determined by cmor_run_subtool
 YYYYMMDD = date.today().strftime('%Y%m%d')
-CMOR_CREATES_DIR = \
-    f'CMIP6/CMIP6/ISMIP6/PCMDI/PCMDI-test-1-0/piControl-withism/r3i1p1f1/Omon/sos/{GRID_LABEL}'
-FULL_OUTPUTDIR = \
-   f'{OUTDIR}/{CMOR_CREATES_DIR}/v{YYYYMMDD}'
-FULL_OUTPUTFILE = \
-f'{FULL_OUTPUTDIR}/sos_Omon_PCMDI-test-1-0_piControl-withism_r3i1p1f1_{GRID_LABEL}_{DATETIMES_INPUTFILE}.nc'
 
-# CMIP6-required global attributes that must be present in CMOR output
-CMIP6_REQUIRED_GLOBAL_ATTRS = [
-    'variable_id', 'mip_era', 'table_id',
+# CMIP7 output path follows output_path_template:
+# <activity_id><source_id><experiment_id><member_id><variable_id><branding_suffix><grid_label>
+CMOR_CREATES_DIR = \
+    f'CMIP/DUMMY-MODEL/historical/r3i1p1f3/sos/tavg-u-hxy-sea/{GRID_LABEL}'
+FULL_OUTPUTDIR = \
+    f'{OUTDIR}/{CMOR_CREATES_DIR}'
+FULL_OUTPUTFILE = \
+    f'{FULL_OUTPUTDIR}/sos_tavg-u-hxy-sea_mon_glb_{GRID_LABEL}_DUMMY-MODEL_historical_r3i1p1f3_{DATETIMES_INPUTFILE}.nc'
+
+# CMIP7-required global attributes that must be present in CMOR output
+# note: CMIP7 uses 'table_info' instead of 'table_id'
+CMIP7_REQUIRED_GLOBAL_ATTRS = [
+    'variable_id', 'mip_era', 'table_info',
     'experiment_id', 'institution_id', 'source_id'
 ]
 
@@ -91,13 +87,19 @@ def _assert_data_matches(ds_in, ds_out):
 
 def _assert_metadata_matches(ds_in, ds_out):
     """
-    helper: assert that CMIP6-required global attributes are present and that
+    helper: assert that CMIP7-required global attributes are present and that
     key variable-level metadata is preserved between input and CMOR output datasets.
     """
-    # CMOR output must contain CMIP6-required global attributes
-    for required_attr in CMIP6_REQUIRED_GLOBAL_ATTRS:
+    # CMOR output must contain CMIP7-required global attributes
+    for required_attr in CMIP7_REQUIRED_GLOBAL_ATTRS:
         assert required_attr in ds_out.ncattrs(), \
             f'CMOR output missing required global attribute {required_attr}'
+
+    # CMIP7 uses 'table_info' instead of 'table_id'
+    assert 'table_info' in ds_out.ncattrs(), \
+        'CMOR output missing table_info attribute (CMIP7-specific)'
+    assert 'table_id' not in ds_out.ncattrs(), \
+        'CMOR output should not have table_id for CMIP7 (uses table_info instead)'
 
     # science variable standard_name and long_name must be preserved
     assert ds_in.variables['sos'].standard_name == ds_out.variables['sos'].standard_name, \
@@ -112,65 +114,27 @@ def _assert_metadata_matches(ds_in, ds_out):
         'sos missing_value differs between input and CMOR output'
 
 
-def _write_fake_table(tmp_path, filename, mip_era):
+# ---------------------------------------------------------------------------
+# CMIP7 table repo setup
+# ---------------------------------------------------------------------------
+def test_setup_cmip7_cmor_table_repo():
     """
-    helper: create a minimal MIP table JSON with a mip_era header for mismatch tests
+    setup routine, make sure the recursively cloned CMIP7 tables exist
     """
-    table_path = tmp_path / filename
-    table_path.write_text(json.dumps({
-        'Header': {'mip_era': mip_era},
-        'variable_entry': {'tas': {'dimensions': ['time']}}
-    }))
-    return table_path
+    assert all( [ Path(CMIP7_TABLE_REPO_PATH).exists(),
+                  Path(TABLE_CONFIG).exists()
+                  ] )
 
 
-def test_cmip6_exp_with_cmip7_table_raises(tmp_path):
-    """
-    ValueError with clear message when CMIP6 experiment uses a CMIP7-format table.
-    """
-    table_path = _write_fake_table(tmp_path, 'CMIP7_fake.json', 'CMIP7')
-    indir = tmp_path / 'indir'
-    outdir = tmp_path / 'outdir'
-    indir.mkdir()
-    outdir.mkdir()
-
-    with pytest.raises(ValueError, match='mip_era mismatch'):
-        cmor_run_subtool(
-            indir=str(indir),
-            json_var_list=VARLIST,
-            json_table_config=str(table_path),
-            json_exp_config=EXP_CONFIG,
-            outdir=str(outdir),
-        )
-
-
-def test_cmip7_exp_with_cmip6_table_raises(tmp_path):
-    """
-    ValueError with clear message when CMIP7 experiment uses a CMIP6-format table.
-    """
-    table_path = _write_fake_table(tmp_path, 'CMIP6_fake.json', 'CMIP6')
-    indir = tmp_path / 'indir'
-    outdir = tmp_path / 'outdir'
-    indir.mkdir()
-    outdir.mkdir()
-
-    with pytest.raises(ValueError, match='mip_era mismatch'):
-        cmor_run_subtool(
-            indir=str(indir),
-            json_var_list=VARLIST,
-            json_table_config=str(table_path),
-            json_exp_config=CMIP7_EXP_CONFIG,
-            outdir=str(outdir),
-        )
-
-
-def test_setup_fre_cmor_run_subtool(capfd):
+# ---------------------------------------------------------------------------
+# CMIP7 case 1: basic CMORization run
+# ---------------------------------------------------------------------------
+def test_setup_fre_cmor_run_subtool_cmip7(capfd):
     """
     The routine generates a netCDF file from an ascii (cdl) file. It also checks for a ncgen
     output file from prev pytest runs, removes it if it's present, and ensures the new file is
-    created without error.
+    created without error. (CMIP7 version)
     """
-
     ncgen_input = f'{ROOTDIR}/reduced_ascii_files/{FILENAME}.cdl'
     ncgen_output = f'{ROOTDIR}/ocean_sos_var_file/{FILENAME}.nc'
 
@@ -184,36 +148,18 @@ def test_setup_fre_cmor_run_subtool(capfd):
     sp = subprocess.run(ex, check = True)
 
     assert all( [ sp.returncode == 0, Path(ncgen_output).exists() ] )
-
-    if Path(FULL_OUTPUTFILE).exists():
-        Path(FULL_OUTPUTFILE).unlink()
-
-    assert not Path(FULL_OUTPUTFILE).exists()
     _out, _err = capfd.readouterr()
 
-def test_fre_cmor_run_subtool_case1(capfd):
-    """ fre cmor run, test-use case """
+def test_fre_cmor_run_subtool_cmip7_case1(capfd):
+    """
+    fre cmor run, CMIP7 test-use case
+    """
 
-    #import sys
-    #assert False, f'{sys.path}'
-
-    #debug
-    #print(
-    #    f'cmor_run_subtool('
-    #    f'\'{INDIR}\','
-    #    f'\'{VARLIST}\','
-    #    f'\'{TABLE_CONFIG}\','
-    #    f'\'{EXP_CONFIG}\','
-    #    f'\'{OUTDIR}\''
-    #    ')'
-    #)
-
-    # test call, where meat of the workload gets done
     cmor_run_subtool(
         indir = INDIR,
         json_var_list = VARLIST,
         json_table_config = TABLE_CONFIG,
-        json_exp_config = EXP_CONFIG,
+        json_exp_config = CMIP7_EXP_CONFIG,
         outdir = OUTDIR,
         run_one_mode = True,
         grid_label = GRID_LABEL,
@@ -226,8 +172,10 @@ def test_fre_cmor_run_subtool_case1(capfd):
                   Path(FULL_INPUTFILE).exists() ] )
     _out, _err = capfd.readouterr()
 
-def test_fre_cmor_run_subtool_case1_output_compare_data(capfd):
-    """ I/O data-only comparison of test case1 """
+def test_fre_cmor_run_subtool_cmip7_case1_output_compare_data(capfd):
+    """
+    I/O data-only comparison of CMIP7 test case1
+    """
     print(f'FULL_OUTPUTFILE={FULL_OUTPUTFILE}')
     print(f'FULL_INPUTFILE={FULL_INPUTFILE}')
 
@@ -240,8 +188,10 @@ def test_fre_cmor_run_subtool_case1_output_compare_data(capfd):
         _assert_data_matches(ds_in, ds_out)
     _out, _err = capfd.readouterr()
 
-def test_fre_cmor_run_subtool_case1_output_compare_metadata(capfd):
-    """ I/O metadata-only comparison of test case1 """
+def test_fre_cmor_run_subtool_cmip7_case1_output_compare_metadata(capfd):
+    """
+    I/O metadata-only comparison of CMIP7 test case1
+    """
     print(f'FULL_OUTPUTFILE={FULL_OUTPUTFILE}')
     print(f'FULL_INPUTFILE={FULL_INPUTFILE}')
 
@@ -255,49 +205,28 @@ def test_fre_cmor_run_subtool_case1_output_compare_metadata(capfd):
     _out, _err = capfd.readouterr()
 
 
-# FYI, but again, helpful for tests
+# ---------------------------------------------------------------------------
+# CMIP7 case 2: differing local vs target variable names
+# ---------------------------------------------------------------------------
 FILENAME_DIFF = \
     f'reduced_ocean_monthly_1x1deg.{DATETIMES_INPUTFILE}.sosV2.nc'
 FULL_INPUTFILE_DIFF = \
     f'{INDIR}/{FILENAME_DIFF}'
 VARLIST_DIFF = \
     f'{ROOTDIR}/varlist_local_target_vars_differ'
-def test_setup_fre_cmor_run_subtool_case2(capfd):
-    """ make a copy of the input file to the slightly different name.
+
+def test_setup_fre_cmor_run_subtool_cmip7_case2(capfd):
+    """
+    make a copy of the input file to the slightly different name.
     checks for outputfile from prev pytest runs, removes it if it's present.
-    this routine also checks to make sure the desired input file is present"""
-    if Path(FULL_OUTPUTFILE).exists():
-        Path(FULL_OUTPUTFILE).unlink()
-    assert not Path(FULL_OUTPUTFILE).exists()
+    this routine also checks to make sure the desired input file is present (CMIP7 version)
+    """
 
-    if Path(OUTDIR+'/CMIP6').exists():
-        shutil.rmtree(OUTDIR+'/CMIP6')
-    assert not Path(OUTDIR+'/CMIP6').exists()
-
-
-    # VERY ANNOYING !!! FYI WARNING TODO
-    if Path(TMPDIR).exists():
-        try:
-            shutil.rmtree(TMPDIR)
-        except OSError as exc:
-            print(f'WARNING: TMPDIR={TMPDIR} could not be removed.')
-            print( '         this does not matter that much, but is unfortunate.')
-            print( '         suspicion: something the cmor module is using is not being closed')
-            print(f'         exc = {exc}')
-
-    #assert not Path(TMPDIR).exists()    # VERY ANNOYING !!! FYI WARNING TODO
-
-    # VERY ANNOYING !!! FYI WARNING TODO
     if Path(OUTDIR).exists():
         try:
             shutil.rmtree(OUTDIR)
         except OSError as exc:
-            print(f'WARNING: OUTDIR={OUTDIR} could not be removed.')
-            print( '         this does not matter that much, but is unfortunate.')
-            print( '         suspicion: something the cmor module is using is not being closed')
-            print(f'         exc = {exc}')
-
-    #assert not Path(OUTDIR).exists()    # VERY ANNOYING !!! FYI WARNING TODO
+            print(f'WARNING: OUTDIR={OUTDIR} could not be removed: {exc}')
 
     # make a copy of the usual test file.
     if not Path(FULL_INPUTFILE_DIFF).exists():
@@ -307,26 +236,16 @@ def test_setup_fre_cmor_run_subtool_case2(capfd):
     assert Path(FULL_INPUTFILE_DIFF).exists()
     _out, _err = capfd.readouterr()
 
-def test_fre_cmor_run_subtool_case2(capfd):
-    """ fre cmor run, test-use case2 """
+def test_fre_cmor_run_subtool_cmip7_case2(capfd):
+    """
+    fre cmor run, CMIP7 test-use case2
+    """
 
-    #debug
-    #print(
-    #    f'cmor_run_subtool('
-    #    f'\'{INDIR}\','
-    #    f'\'{VARLIST_DIFF}\','
-    #    f'\'{TABLE_CONFIG}\','
-    #    f'\'{EXP_CONFIG}\','
-    #    f'\'{OUTDIR}\''
-    #    ')'
-    #)
-
-    # test call, where meat of the workload gets done
     cmor_run_subtool(
         indir = INDIR,
         json_var_list = VARLIST_DIFF,
         json_table_config = TABLE_CONFIG,
-        json_exp_config = EXP_CONFIG,
+        json_exp_config = CMIP7_EXP_CONFIG,
         outdir = OUTDIR,
         run_one_mode = True,
         grid_label = GRID_LABEL,
@@ -335,14 +254,15 @@ def test_fre_cmor_run_subtool_case2(capfd):
         calendar_type = CALENDAR_TYPE
     )
 
-    # check we ran on the right input file.
+    # check we ran on the right input file and output was created.
     assert all( [ Path(FULL_OUTPUTFILE).exists(),
                   Path(FULL_INPUTFILE_DIFF).exists() ] )
     _out, _err = capfd.readouterr()
 
-
-def test_fre_cmor_run_subtool_case2_output_compare_data(capfd):
-    """ I/O data-only comparison of test case2 """
+def test_fre_cmor_run_subtool_cmip7_case2_output_compare_data(capfd):
+    """
+    I/O data-only comparison of CMIP7 test case2
+    """
     print(f'FULL_OUTPUTFILE={FULL_OUTPUTFILE}')
     print(f'FULL_INPUTFILE_DIFF={FULL_INPUTFILE_DIFF}')
 
@@ -355,8 +275,10 @@ def test_fre_cmor_run_subtool_case2_output_compare_data(capfd):
         _assert_data_matches(ds_in, ds_out)
     _out, _err = capfd.readouterr()
 
-def test_fre_cmor_run_subtool_case2_output_compare_metadata(capfd):
-    """ I/O metadata-only comparison of test case2 """
+def test_fre_cmor_run_subtool_cmip7_case2_output_compare_metadata(capfd):
+    """
+    I/O metadata-only comparison of CMIP7 test case2
+    """
     print(f'FULL_OUTPUTFILE={FULL_OUTPUTFILE}')
     print(f'FULL_INPUTFILE_DIFF={FULL_INPUTFILE_DIFF}')
 
@@ -369,22 +291,13 @@ def test_fre_cmor_run_subtool_case2_output_compare_metadata(capfd):
         _assert_metadata_matches(ds_in, ds_out)
     _out, _err = capfd.readouterr()
 
-def test_exp_config_cleanup():
-    """
-    Restores the CMIP6 experiment config to its pristine state after tests
-    that mutate it in-place (e.g. grid / calendar updates).
 
-    The config is no longer tracked by git — it is materialised by a
-    session-scoped conftest fixture — so we rewrite it from the canonical
-    fixture data instead of running ``git restore``.
+# ---------------------------------------------------------------------------
+# CMIP7 error handling tests
+# ---------------------------------------------------------------------------
+def test_cmor_run_subtool_cmip7_raise_value_error():
     """
-    Path(EXP_CONFIG).write_text(
-        json.dumps(_CMIP6_EXP_CONFIG_DATA, indent=4), encoding='utf-8'
-    )
-
-def test_cmor_run_subtool_raise_value_error():
-    """
-    test that ValueError raised when required args are absent
+    test that ValueError raised when required args are absent (CMIP7 version)
     """
     with pytest.raises(ValueError):
         cmor_run_subtool( indir = None,
@@ -393,12 +306,11 @@ def test_cmor_run_subtool_raise_value_error():
                           json_exp_config = None,
                           outdir = None )
 
-def test_fre_cmor_run_subtool_no_exp_config():
+def test_fre_cmor_run_subtool_cmip7_no_exp_config():
     """
-    fre cmor run, exception, json_exp_config DNE
+    fre cmor run, exception, json_exp_config DNE (CMIP7 version)
     """
 
-    # test call, where meat of the workload gets done
     with pytest.raises(FileNotFoundError):
         cmor_run_subtool(
             indir = INDIR,
@@ -408,74 +320,32 @@ def test_fre_cmor_run_subtool_no_exp_config():
             outdir = OUTDIR
         )
 
-VARLIST_EMPTY = \
-    f'{ROOTDIR}/empty_varlist'
-def test_fre_cmor_run_subtool_empty_varlist():
+def test_fre_cmor_run_subtool_cmip7_empty_varlist():
     """
-    fre cmor run, exception, variable list is empty
+    fre cmor run, exception, variable list is empty (CMIP7 version)
     """
+    varlist_empty = f'{ROOTDIR}/empty_varlist'
 
-    # test call, where meat of the workload gets done
     with pytest.raises(ValueError):
         cmor_run_subtool(
             indir = INDIR,
-            json_var_list = VARLIST_EMPTY,
+            json_var_list = varlist_empty,
             json_table_config = TABLE_CONFIG,
-            json_exp_config = EXP_CONFIG,
+            json_exp_config = CMIP7_EXP_CONFIG,
             outdir = OUTDIR
         )
 
+def test_fre_cmor_run_subtool_cmip7_opt_var_name_not_in_table():
+    """
+    fre cmor run, exception, opt_var_name not in CMIP7 table
+    """
 
-def test_fre_cmor_run_subtool_opt_var_name_not_in_table():
-    """ fre cmor run, exception,  """
-
-    # test call, where meat of the workload gets done
     with pytest.raises(ValueError):
         cmor_run_subtool(
             indir = INDIR,
             json_var_list = VARLIST,
             json_table_config = TABLE_CONFIG,
-            json_exp_config = EXP_CONFIG,
+            json_exp_config = CMIP7_EXP_CONFIG,
             outdir = OUTDIR,
-            opt_var_name='difmxybo'
-        )
-
-
-def test_fre_cmor_run_subtool_missing_mip_era(tmp_path):
-    """
-    KeyError when the exp config JSON has no mip_era entry.
-    """
-    # create a minimal exp config that is missing 'mip_era'
-    bad_exp = tmp_path / 'no_mip_era.json'
-    exp_data = {'institution_id': 'TEST', 'source_id': 'TEST-1-0'}
-    bad_exp.write_text(json.dumps(exp_data))
-
-    with pytest.raises(KeyError, match='noncompliant'):
-        cmor_run_subtool(
-            indir = INDIR,
-            json_var_list = VARLIST,
-            json_table_config = TABLE_CONFIG,
-            json_exp_config = str(bad_exp),
-            outdir = OUTDIR,
-        )
-
-
-def test_fre_cmor_run_subtool_unsupported_mip_era(tmp_path):
-    """
-    ValueError when mip_era is present but not CMIP6 or CMIP7.
-    """
-    # create an exp config with an unsupported mip_era value
-    bad_exp = tmp_path / 'bad_mip_era.json'
-    with open(EXP_CONFIG, 'r', encoding='utf-8') as f:
-        exp_data = json.load(f)
-    exp_data['mip_era'] = 'CMIP99'
-    bad_exp.write_text(json.dumps(exp_data))
-
-    with pytest.raises(ValueError, match='only supports CMIP6 and CMIP7'):
-        cmor_run_subtool(
-            indir = INDIR,
-            json_var_list = VARLIST,
-            json_table_config = TABLE_CONFIG,
-            json_exp_config = str(bad_exp),
-            outdir = OUTDIR,
+            opt_var_name='zzzz_nonexistent_var'
         )
