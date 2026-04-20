@@ -374,7 +374,7 @@ def test_exp_config_cleanup():
     Restores the CMIP6 experiment config to its pristine state after tests
     that mutate it in-place (e.g. grid / calendar updates).
 
-    The config is no longer tracked by git — it is materialised by a
+    The config is no longer tracked by git — it is materialized by a
     session-scoped conftest fixture — so we rewrite it from the canonical
     fixture data instead of running ``git restore``.
     """
