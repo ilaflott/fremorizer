@@ -24,7 +24,10 @@ jobs:
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
-          auto-activate-base: true
+          auto-activate: true
+          activate-environment: base
+          conda-remove-defaults: true
+          miniforge-version: latest
           channels: conda-forge,noaa-gfdl,ilaflott
 
       - name: Configure Conda

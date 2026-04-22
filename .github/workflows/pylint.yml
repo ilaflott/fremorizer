@@ -29,8 +29,9 @@ jobs:
         with:
           activate-environment: fremorizer
           environment-file: environment.yaml
-          auto-activate-base: false
+          auto-activate: false
           miniforge-version: latest
+          conda-remove-defaults: true
 
       - name: Configure Conda
         run: |

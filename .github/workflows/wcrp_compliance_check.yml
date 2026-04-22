@@ -29,7 +29,8 @@ jobs:
         with:
           activate-environment: fremorizer-wcrp
           environment-file: environment.yaml
-          auto-activate-base: false
+          conda-remove-defaults: true
+          auto-activate: false
           miniforge-version: latest
           channels: conda-forge,noaa-gfdl
 

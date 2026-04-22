@@ -86,7 +86,7 @@ cd fremorizer
 
 # create an environment and install the local checkout
 conda env create -f environment.yaml
-conda actiavte fremorizer
+conda activate fremorizer
 pip install -e . 
 
 # Run tests
@@ -102,7 +102,7 @@ pylint --rcfile pylintrc fremorizer/
 
 
 ### as a command line interface (CLI)
-The CLI entry point is `fremor`, currently a suite of (currently) six routines for facillitating data preparation for
+The CLI entry point is `fremor`, currently a suite of (currently) six routines for facilitating data preparation for
 CMIP7. 
 ```bash
 # The full list of subcommands

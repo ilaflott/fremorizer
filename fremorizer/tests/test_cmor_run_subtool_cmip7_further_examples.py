@@ -31,7 +31,7 @@ CMORBITE_VARLIST = f'{ROOTDIR}/CMORbite_var_list.json'
 # cmip7 table repo
 CMIP7_TABLE_REPO_PATH = f'{ROOTDIR}/cmip7-cmor-tables'
 
-# experiment config (materialised by conftest._write_exp_configs)
+# experiment config (materialized by conftest._write_exp_configs)
 EXP_CONFIG_CMIP7 = f'{ROOTDIR}/CMOR_CMIP7_input_example.json'
 
 # determined by cmor_run_subtool
@@ -152,12 +152,12 @@ def test_case_cmip7(  # pylint: disable=too-many-arguments,too-many-positional-a
             '(CMIP7 uses ch4 variants instead); '
             'needs new mock data or a different variable mapping'
         )
-    if opt_var_name == 'gppLut':
-        pytest.skip(
-            'gppLut_tavg-u-hxy-multi cmor.axis fails: '
-            'CMIP7 landuse coordinate definition is incompatible '
-            'with the mock archive landuse axis values'
-        )
+    #if opt_var_name == 'gppLut':
+    #    pytest.skip(
+    #        'gppLut_tavg-u-hxy-multi cmor.axis fails: '
+    #        'CMIP7 landuse coordinate definition is incompatible '
+    #        'with the mock archive landuse axis values'
+    #    )
 
     # native-grid ocean tests: prevent gold statics lookup from finding /archive files
     if grid_label == 'gn':
