@@ -1,4 +1,4 @@
-# `fremorizer`
+# `fremorizer` / `fremor`
 `fremorizer` CMORizes FRE output with `CMOR`. It is a `conda` package and it's documentation can be found on
 [`readthedocs`](https://fremorizer.readthedocs.io/en/latest/).
 
@@ -6,24 +6,40 @@
 [![Anaconda-Server Badge](https://anaconda.org/ilaflott/fremorizer/badges/latest_release_date.svg)](https://anaconda.org/ilaflott/fremorizer)
 [![Anaconda-Server Badge](https://anaconda.org/ilaflott/fremorizer/badges/latest_release_relative_date.svg)](https://anaconda.org/ilaflott/fremorizer)
 
+[![pylint](https://img.shields.io/badge/pylint-%E2%89%A59.7-brightgreen)](https://github.com/ilaflott/fremorizer/actions/workflows/pylint.yml)
+[![codecov](https://codecov.io/gh/ilaflott/fremorizer/branch/main/graph/badge.svg)](https://codecov.io/gh/ilaflott/fremorizer)
+
 [![publish_conda](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/publish_conda.yml)
 [![readthedocs](https://app.readthedocs.org/projects/fremorizer/badge/?version=latest&style=flat)](https://fremorizer.readthedocs.io/en/latest/)
-
 [![pylint](https://github.com/ilaflott/fremorizer/actions/workflows/pylint.yml/badge.svg?branch=main)](https://github.com/ilaflott/fremorizer/actions/workflows/pylint.yml)
-[![pylint](https://img.shields.io/badge/pylint-%E2%89%A59.7-brightgreen)](https://github.com/NOAA-GFDL/epmt/actions/workflows/build_and_test_epmt.yml)
-[![codecov](https://codecov.io/gh/ilaflott/fremorizer/branch/main/graph/badge.svg)](https://codecov.io/gh/ilaflott/fremorizer)
+
+`python3.11`:[![3.11](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.11)
+
+`python3.12`:[![3.12](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.12)
+
+`python3.13`:[![3.13](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.13)
+
+`python3.14`:[![3.14](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.14)
+
 
 
 ## Background and Purpose
-`fremorizer` is a model output rewriter (CMORizer) for FRE/FMS based models and output. It was originally the `fre.cmor`
-submodule of [`NOAA-GFDL/fre-cli`](https://github.com/NOAA-GFDL/fre-cli). `fremorizer` (or `fremor` for short) is geared
-for rewriting NOAA-GFDL datasets for further quality control checks, assessments and data publishing pipelines in the
+`fremorizer` is a model output rewriter (CMORizer) for FRE/FMS based models and output. `fremorizer` (or `fremor` for short) is
+geared for standardizing NOAA-GFDL datasets for further quality control checks, assessments and data publishing pipelines in the
 context of CMIP7 using the [`CMOR`](https://cmor.llnl.gov/) library.
 
+### Relationship to `fre-cli`
+`fremorizer` was originally the `fre.cmor` submodule of [`NOAA-GFDL/fre-cli`](https://github.com/NOAA-GFDL/fre-cli) and so stands
+on the shoulders of it's contributors, retaining it's general structure and lessons learned from it. Future re-integrations back 
+into `fre-cli`, as a formal package dependency, are being assessed.
 
+### Contributors
+[![Contributors](https://contrib.rocks/image?repo=ilaflott/fremorizer)](https://github.com/ilaflott/fremorizer/graphs/contributors)
+
+#### AI Disclaimer
+AI was heavily used in the creation of this repository, primarily `github`'s `copilot` with `Claude` (`opus4.6` `sonnet4.6`, and `haiku`), and `Gemini` and `Chat-GPT` models to a lesser extent, in agent mode. `Claude` and `Codex` agents have also contributed.
 
 ## Installation / Access
-
 
 ### Requirements
 
@@ -167,11 +183,7 @@ To view compliance results from a workflow/CI run:
 3. Download the `wcrp-compliance-reports` artifact
 
 
-### `conda` environment tests
 
-| Python 3.11 | Python 3.12 | Python 3.13 | Python 3.14 |
-|-------------|-------------|-------------|-------------|
-| [![3.11](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.11) | [![3.12](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.12) | [![3.13](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.13) | [![3.14](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml/badge.svg)](https://github.com/ilaflott/fremorizer/actions/workflows/create_test_conda_env.yml?query=branch%3Amain+python-version%3A3.14) |
 
 
 

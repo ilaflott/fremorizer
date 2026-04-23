@@ -178,8 +178,10 @@ def test_make_simple_varlist_mip_table_filter(tmp_path):
     result = make_simple_varlist(str(tmp_path), None, json_mip_table=str(mip_table))
 
     assert result is not None
-    assert 'sos' in result
-    assert 'notinmip' not in result
+    assert result.get('sos') == 'sos', 'MIP variable should be self-mapped'
+    assert 'notinmip' in result, 'non-MIP variable should be included'
+    assert result['notinmip'] == '', 'non-MIP variable should have empty string value'
+
 
 
 # ---- no files matching search pattern ----
@@ -254,8 +256,9 @@ def test_make_simple_varlist_mip_table_no_match(tmp_path):
 
     result = make_simple_varlist(str(tmp_path), None, json_mip_table=str(mip_table))
 
-    # No variables matched
-    assert result is None
+    # With new semantics, all found variables are included: non-MIP vars get '' as value.
+    assert result is not None
+    assert result == {'fake_var': ''}
 
 
 # ---- variable only present at a minority datetime is still returned ----
