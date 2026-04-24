@@ -1,4 +1,4 @@
-'''
+"""
 Expanded set of CMIP7 tests for fremor run — cases beyond test_cmor_run_subtool_cmip7.py.
 
 These tests exercise cmor_run_subtool against a variety of variables, tables,
@@ -12,7 +12,7 @@ configuration and CMIP7-format CMOR tables.
        pytest --basetemp=/tmp/fremorizer-debug -k test_case_cmip7 -x
 
    Output files will then persist under ``/tmp/fremorizer-debug``.
-'''
+"""
 
 from datetime import date
 import glob
@@ -56,12 +56,13 @@ CMOR_CREATES_DIR_BASE_CMIP7 = (
 
 # ── helper: convert CDLs to NC in a test directory ─────────────────────────
 def _ncgen_for_case(testfile_dir, opt_var_name):
-    '''Convert the CDL file(s) for *opt_var_name* to NetCDF-4 inside *testfile_dir*.
+    """
+    Convert the CDL file(s) for *opt_var_name* to NetCDF-4 inside *testfile_dir*.
 
     Returns the path to the primary NC file. Also generates ancillary files
     (e.g. ``ps.nc`` for ``cl`` / ``mc``, ``ocean_monthly.static.nc`` for native
     ocean grid variables).
-    '''
+    """
     cdl_files = glob.glob(f'{testfile_dir}*.{opt_var_name}.cdl')
     assert len(cdl_files) >= 1, (
         f'no CDL file found for variable {opt_var_name} in {testfile_dir}'
@@ -144,7 +145,9 @@ def test_case_cmip7(  # pylint: disable=too-many-arguments,too-many-positional-a
     testfile_dir, table, opt_var_name, grid_label, start, calendar,
     tmp_path, monkeypatch,
 ):
-    '''Run cmor_run_subtool for a single CMIP7 variable and assert output exists.'''
+    """
+    Run cmor_run_subtool for a single CMIP7 variable and assert output exists.
+    """
     # ── conditional skips for cases that cannot yet pass ────────────────────
     if opt_var_name == 'ch4global':
         pytest.skip(
@@ -159,12 +162,12 @@ def test_case_cmip7(  # pylint: disable=too-many-arguments,too-many-positional-a
     #        'with the mock archive landuse axis values'
     #    )
 
-    # native-grid ocean tests: prevent gold statics lookup from finding /archive files
-    if grid_label == 'gn':
-        monkeypatch.setattr(
-            'fremorizer.cmor_mixer.find_gold_ocean_statics_file',
-            lambda **kw: None,
-        )
+    ## native-grid ocean tests: prevent gold statics lookup from finding /archive files
+    #if opt_var_name == 'sos':
+    #    monkeypatch.setattr(
+    #        'fremorizer.cmor_mixer.find_gold_ocean_statics_file',
+    #        lambda **kw: None,
+    #    )
 
     _ncgen_for_case(testfile_dir, opt_var_name)
 
@@ -199,3 +202,4 @@ def test_case_cmip7(  # pylint: disable=too-many-arguments,too-many-positional-a
         f'no CMOR output found matching {cmor_output_glob}'
     )
     assert Path(cmor_output_files[0]).exists()
+
