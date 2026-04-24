@@ -271,7 +271,7 @@ def rewrite_netcdf_file_var( mip_var_cfgs: dict = None,
         # grab the lat/lon points, have shape (yh, xh)
         fre_logger.info('reading geolat and geolon coordinates of cell centers from statics file')
         statics_lat = from_dis_gimme_dis(statics_ds, 'geolat')
-        statics_lon = from_dis_gimme_dis(statics_ds, 'geolon')
+        statics_lon = from_dis_gimme_dis(statics_ds, 'geolon') + 300.
 
         fre_logger.info('')
         print_data_minmax(statics_lat, 'statics_lat')
@@ -293,7 +293,7 @@ def rewrite_netcdf_file_var( mip_var_cfgs: dict = None,
         # grab the corners of the cells, should have shape (yh+1, xh+1)
         fre_logger.info('reading geolat and geolon coordinates of cell corners from statics file')
         lat_c = from_dis_gimme_dis(statics_ds, 'geolat_c')
-        lon_c = from_dis_gimme_dis(statics_ds, 'geolon_c')
+        lon_c = from_dis_gimme_dis(statics_ds, 'geolon_c') + 300.
 
         fre_logger.info('')
         print_data_minmax(lat_c, 'lat_c')
@@ -327,7 +327,7 @@ def rewrite_netcdf_file_var( mip_var_cfgs: dict = None,
         # grab the h-point lat and lon
         fre_logger.info('reading yh, xh')
         yh = from_dis_gimme_dis(ds, 'yh')
-        xh = from_dis_gimme_dis(ds, 'xh')
+        xh = from_dis_gimme_dis(ds, 'xh') + 300.
 
         fre_logger.info('')
         print_data_minmax(yh[:], 'yh')
@@ -340,7 +340,7 @@ def rewrite_netcdf_file_var( mip_var_cfgs: dict = None,
         # read the q-point native-grid lat lon points
         fre_logger.info('reading yq, xq from statics file')
         yq = from_dis_gimme_dis(statics_ds, 'yq')
-        xq = from_dis_gimme_dis(statics_ds, 'xq')
+        xq = from_dis_gimme_dis(statics_ds, 'xq') + 300.
 
         fre_logger.info('')
         print_data_minmax(yq, 'yq')
