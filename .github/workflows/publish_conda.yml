@@ -1,6 +1,5 @@
 name: publish_conda
 on:
-  pull_request:
   push:
     branches:
       - main
@@ -58,7 +57,7 @@ jobs:
         env:
           ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
         run: |
-          echo "quick sanity check, is the token available as a secret? is the env var set?"
+          echo "sanity check, is the token available as a secret? is the env var set?"
           if [ -z "${{ secrets.ANACONDA_TOKEN }}" ]; then
              echo "ERROR: ANACONDA_TOKEN is empty or not accessible"
              exit 1
@@ -71,19 +70,19 @@ jobs:
           echo $SHELL
 
           echo ""
-          echo "printing conda config... again... just in case..."
+          echo "sanity check, printing conda config... again... just in case..."
           conda config --show
 
           echo ""
-          echo "conda build version is"
+          echo "sanity check, conda build version is"
           conda build --version
 
           echo ""
-          echo "python version"
+          echo "sanity check, python version"
           python --version
 
           echo ""
-          echo "conda build check"
+          echo "sanity check, conda build check"
           conda build --debug --check .
 
           echo ""
@@ -93,8 +92,8 @@ jobs:
 
           sleep 5
           echo ""
-          echo "extra info from additional force-upload step:"
-          anaconda --verbose upload --force $CONDA_PKG
+          echo "sanity check, extra info from additional force-upload step:"
+          anaconda --verbose --token "$ANACONDA_API_TOKEN" upload --force $CONDA_PKG
 
       # -----------------------------------------------------------------
       # Post-publish verification: install epmt from the noaa-gfdl channel
