@@ -18,8 +18,8 @@ jobs:
     steps:
       - name: Checkout Files
         uses: actions/checkout@v4
-		with:
-		  submodules: 'recursive'
+        with:
+          submodules: 'recursive'
 
       - name: Set up base Miniforge
         uses: conda-incubator/setup-miniconda@v3
@@ -47,14 +47,14 @@ jobs:
           conda config --show
 
       - name: Conda Build Check
-	    run: |
+        run: |
           echo ""
           echo "sanity check, conda build check"
-          conda build --check .		  
+          conda build --check .          
 
       - name: Build fremor Conda Package
         run: |
           echo ""
           echo "building conda package for publishing"
-		  export ANACONDA_API_TOKEN=${{ secrets.ANACONDA_TOKEN }}
+          export ANACONDA_API_TOKEN=${{ secrets.ANACONDA_TOKEN }}
           conda build --no-include-recipe --no-test .
