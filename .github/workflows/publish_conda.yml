@@ -52,8 +52,9 @@ jobs:
           conda build --check .          
 
       - name: Build fremor Conda Package
+        env:
+          ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
         run: |
           echo ""
           echo "building conda package for publishing"
-          export ANACONDA_API_TOKEN=${{ secrets.ANACONDA_TOKEN }}
           conda build --no-include-recipe --no-test .
