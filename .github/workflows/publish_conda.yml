@@ -1,5 +1,6 @@
 name: publish_conda
 on:
+  pull_request:
   push:
     branches:
       - main
@@ -83,17 +84,17 @@ jobs:
 
           echo ""
           echo "sanity check, conda build check"
-          conda build --debug --check .
+          conda build --check .
 
           echo ""
           echo "building conda package for publishing"
-          CONDA_PKG=$(conda build --debug --output .)
-          conda build --debug --no-test --token "$ANACONDA_API_TOKEN" .
+          CONDA_PKG=$(conda build --output .)
+          conda build --no-anaconda-upload --no-include-recipe --no-test .
 
           sleep 5
           echo ""
-          echo "sanity check, extra info from additional force-upload step:"
-          anaconda --verbose --token "$ANACONDA_API_TOKEN" upload --force $CONDA_PKG
+          echo "upload step"
+          anaconda --verbose --token "$ANACONDA_API_TOKEN" upload $CONDA_PKG
 
       # -----------------------------------------------------------------
       # Post-publish verification: install epmt from the noaa-gfdl channel
