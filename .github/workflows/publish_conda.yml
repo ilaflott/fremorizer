@@ -79,13 +79,7 @@ jobs:
 
           echo ""
           echo "building conda package for publishing"
-#          CONDA_PKG=$(conda build --output .)
           conda build --no-include-recipe --no-test .
-
-#          sleep 5
-#          echo ""
-#          echo "upload step"
-#          anaconda --verbose --token "$ANACONDA_API_TOKEN" upload $CONDA_PKG
 
       # -----------------------------------------------------------------
       # Post-publish verification: install epmt from the noaa-gfdl channel
