@@ -1,5 +1,6 @@
 name: publish_conda
 on:
+  pull_request:
   push:
     branches:
       - main
@@ -18,7 +19,7 @@ jobs:
       - name: Checkout Files
         uses: actions/checkout@v4
 		with:
-		  recursive: true
+		  submodules: 'recursive'
 
       - name: Set up base Miniforge
         uses: conda-incubator/setup-miniconda@v3
@@ -28,6 +29,11 @@ jobs:
           miniforge-version: latest
           conda-remove-defaults: true
           channels: conda-forge,noaa-gfdl
+
+      - name: Conda install conda-build
+        run: |
+          echo "conda install conda-build"
+          conda install conda-forge::conda-build conda-forge::anaconda-client
 
       - name: Configure Conda
         run: |
@@ -40,35 +46,15 @@ jobs:
           echo "printing conda config just in case"
           conda config --show
 
-      - name: Conda install conda-build
-        run: |
-          echo "conda install conda-build"
-          conda install conda-forge::conda-build conda-forge::anaconda-client
-
-      - name: Build fremor Conda Package
-        env:
-          ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
-        run: |
-          echo "sanity check, is the token available as a secret? is the env var set?"
-          if [ -z "${{ secrets.ANACONDA_TOKEN }}" ]; then
-             echo "ERROR: ANACONDA_TOKEN is empty or not accessible"
-             exit 1
-          else
-             echo "ANACONDA_TOKEN is set (length: ${#ANACONDA_API_TOKEN})"
-          fi
-
-          echo ""
-          echo "sanity check, conda build version is"
-          conda build --version
-
-          echo ""
-          echo "sanity check, python version"
-          python --version
-
+      - name: Conda Build Check
+	    run: |
           echo ""
           echo "sanity check, conda build check"
-          conda build --check .
+          conda build --check .		  
 
+      - name: Build fremor Conda Package
+        run: |
           echo ""
           echo "building conda package for publishing"
+		  export ANACONDA_API_TOKEN=${{ secrets.ANACONDA_TOKEN }}
           conda build --no-include-recipe --no-test .
