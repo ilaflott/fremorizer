@@ -9,6 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
+  id-token: write
   contents: read
 
 jobs:
@@ -39,3 +40,9 @@ jobs:
           name: fremor-pip-packages
           path: dist/*
           if-no-files-found: error
+
+#      - name: Publish package to TestPyPI
+#        continue-on-error: true
+#        uses: pypa/gh-action-pypi-publish@release/v1
+#        with:
+#          repository-url: https://test.pypi.org/legacy/
