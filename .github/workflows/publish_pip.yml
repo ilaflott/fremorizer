@@ -1,7 +1,8 @@
-name: build_pip
+name: publish_pip
 on:
-  pull_request:
-    branches:
+  push:
+    tags:
+      - '*'
 
 # cancel running jobs if theres a newer push
 concurrency:
@@ -9,6 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
+  id-token: write
   contents: read
 
 jobs:
@@ -33,9 +35,7 @@ jobs:
           echo "Building fremor package using python -m build"
           python -m build
 
-      - name: Upload pip Package Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          name: fremor-pip-packages
-          path: dist/*
-          if-no-files-found: error
+          repository-url: https://pypi.org/legacy/
