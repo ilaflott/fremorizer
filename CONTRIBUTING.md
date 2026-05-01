@@ -16,45 +16,36 @@ While using the tool outside of a virtual environment is possible, it is not tes
 
 To set up your local development environment:
 
-1. **Clone the repository:**
-```bash
-   # omit --recursive if you don't want tables as submodules
-   git clone --recursive [https://github.com/NOAA-GFDL/fremor.git](https://github.com/NOAA-GFDL/fremor.git)
-   cd fremor
-```
+1. *Clone the repository:*
+    ```bash
+    # omit --recursive if you don't want tables as submodules
+    git clone --recursive [https://github.com/NOAA-GFDL/fremor.git](https://github.com/NOAA-GFDL/fremor.git)
+    cd fremor
+    ```
 
-2. **Create the `conda` environment, activate, install:**
-```bash
-conda env create -f environment.yaml
-conda activate fremor
-pip install -e .
-```
+2. *Create the `conda` environment, activate, install:*
+    ```bash
+    conda env create -f environment.yaml
+    conda activate fremor
+    pip install -e .
+    ```
 
-## Testing and Linting
+3. *Run tests with `pytest` and lint with `pylint` after hacking:*
+    ```bash
+    pytest fremor/tests/
+    pylint --rcfile pylintrc fremor
+    ```
 
-We highly recommend running our test suite and linters locally before submitting your code to ensure it passes our CI pipelines. 
-For detailed coding conventions, please refer to our [Code Style Guide](CODE_STYLE.md).
 
-**Run tests using pytest:**
-
-```bash
-pytest fremor/tests/
-```
-
-**Run the linter using pylint:**
-
-```bash
-pylint --rcfile pylintrc fremor/
-```
 
 ## Opening a Pull Request
-Forks and branches are welcome, but branches are only useable by a priveleged, trusted few whom work with this repository.
-First time contributors must always make their first contribution from a fork.
+Forks and branches are welcome, but branches are only useable by a privileged, trusted few who work with 
+this repository. First time contributors must always make their first contribution from a fork.
 
 **Workflow:** Branch off of `main` for your feature or bug fix, and (generally) treat `main` as the trunk
 
 **Committing:** Commit your changes and be sure to reference the original GitHub issue in your commit message. The more atomic, the better!
 
-**CI Checks:** Ensure all GitHub Actions (such as `create_test_conda_env`) and linter checks) pass successfully.
+**CI Checks:** Ensure all GitHub Actions (such as `create_test_conda_env`, `pylint`) pass successfully.
 
 > **Note:** For maintainers pushing a new published release, please see the specific Release Procedure outlined in the [README.md](README.md).
