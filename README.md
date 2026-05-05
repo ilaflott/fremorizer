@@ -10,6 +10,7 @@
 [![codecov](https://codecov.io/gh/NOAA-GFDL/fremor/branch/main/graph/badge.svg)](https://codecov.io/gh/NOAA-GFDL/fremor)
 
 [![publish_conda](https://github.com/NOAA-GFDL/fremor/actions/workflows/publish_conda.yml/badge.svg?branch=main)](https://github.com/NOAA-GFDL/fremor/actions/workflows/publish_conda.yml)
+[![publish_pip](https://github.com/NOAA-GFDL/fremor/actions/workflows/publish_pip.yml/badge.svg)](https://github.com/NOAA-GFDL/fremor/actions/workflows/publish_pip.yml)
 [![readthedocs](https://app.readthedocs.org/projects/fremor/badge/?version=latest&style=flat)](https://fremor.readthedocs.io/en/latest/)
 [![pylint](https://github.com/NOAA-GFDL/fremor/actions/workflows/pylint.yml/badge.svg?branch=main)](https://github.com/NOAA-GFDL/fremor/actions/workflows/pylint.yml)
 
