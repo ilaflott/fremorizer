@@ -28,7 +28,7 @@ jobs:
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
-          activate-environment: fremorizer-compliance
+          activate-environment: fremor-compliance
           python-version: "3.12"
           auto-activate-base: false
           miniforge-version: latest
@@ -47,7 +47,7 @@ jobs:
           echo "printing conda config just in case"
           conda config --show
 
-      - name: Install dependencies for fremorizer
+      - name: Install dependencies for fremor
         run: |
           conda install -y \
             conda-forge::cftime \
@@ -62,7 +62,7 @@ jobs:
         run: |
           conda install -y conda-forge::compliance-checker
 
-      - name: Install fremorizer
+      - name: Install fremor
         run: |
           pip install .
 
@@ -75,7 +75,7 @@ jobs:
           echo "=========================================="
           echo "Running CMIP6 basic tests..."
           echo "=========================================="
-          pytest fremorizer/tests/test_cmor_run_subtool.py -v || true
+          pytest fremor/tests/test_cmor_run_subtool.py -v || true
 
           echo ""
           echo "=========================================="
@@ -84,7 +84,7 @@ jobs:
           # Run extended tests which include CMIP7 examples
           # Note: Some tests may fail due to missing ncgen3 or other dependencies
           # We use continue-on-error to ensure we gather whatever outputs were generated
-          pytest fremorizer/tests/test_cmor_run_subtool_further_examples.py -v || true
+          pytest fremor/tests/test_cmor_run_subtool_further_examples.py -v || true
 
           echo ""
           echo "Test execution complete. Proceeding to gather outputs..."
