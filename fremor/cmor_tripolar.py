@@ -80,7 +80,7 @@ def load_tripolar_grid( ds: nc.Dataset,
             statics_file_path = find_statics_file(prev_path)
 
         fre_logger.info('statics_file_path is %s', statics_file_path)
-    except Exception as exc: #uncovered
+    except (OSError, FileNotFoundError) as exc:
         fre_logger.warning( '%s',
                             f'exc = {exc}\n' + \
                              'an ocean statics file is needed, but it could not be found.\n' + \
@@ -184,7 +184,7 @@ def load_tripolar_grid( ds: nc.Dataset,
 
     if any( [yh_dim != (yq_dim - 1),
              xh_dim != (xq_dim - 1)]):
-        raise ValueError( #uncovered
+        raise ValueError(
             'the number of h-point lat/lon coordinates is inconsistent with the number of\n'
             'q-point lat/lon coordinates! i.e. ( hpoint_dim != qpoint_dim-1 )\n'
             f'yh_dim = {yh_dim}\n'

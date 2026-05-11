@@ -9,6 +9,8 @@ import netCDF4
 import numpy as np
 import pytest
 
+import fremor.cmor_constants as _const
+import fremor.cmor_helpers as _helpers
 from fremor.cmor_tripolar import load_tripolar_grid
 
 
@@ -95,10 +97,6 @@ class TestLoadTripolarGrid:
         _make_mock_statics_nc(statics)
         _make_mock_data_nc(data_nc)
 
-        import fremor.cmor_tripolar as _mod # pylint: disable=import-outside-toplevel
-        import fremor.cmor_helpers as _helpers # pylint: disable=import-outside-toplevel
-        import fremor.cmor_constants as _const # pylint: disable=import-outside-toplevel
-
         fake_archive = tmp_path / 'fake_archive'
         fake_archive_file = fake_archive / _const.CMIP7_GOLD_OCEAN_FILE_STUB
         fake_archive_file.parent.mkdir(parents=True, exist_ok=True)
@@ -109,7 +107,6 @@ class TestLoadTripolarGrid:
         try:
             _const.ARCHIVE_GOLD_DATA_DIR = str(fake_archive)
             _helpers.ARCHIVE_GOLD_DATA_DIR = str(fake_archive)
-            _mod.ARCHIVE_GOLD_DATA_DIR = str(fake_archive)  # not imported directly, but guard
 
             ds = netCDF4.Dataset(str(data_nc), 'r+')
             result = load_tripolar_grid(ds=ds, netcdf_file=str(data_nc), prev_path=None)
@@ -130,9 +127,6 @@ class TestLoadTripolarGrid:
         yh_size, xh_size = 4, 5
         _make_mock_statics_nc(statics, yh_size=yh_size, xh_size=xh_size)
         _make_mock_data_nc(data_nc, yh_size=yh_size, xh_size=xh_size)
-
-        import fremor.cmor_helpers as _helpers # pylint: disable=import-outside-toplevel
-        import fremor.cmor_constants as _const # pylint: disable=import-outside-toplevel
 
         fake_archive = tmp_path / 'fake_archive2'
         fake_archive_file = fake_archive / _const.CMIP7_GOLD_OCEAN_FILE_STUB
@@ -178,9 +172,6 @@ class TestLoadTripolarGrid:
         _make_mock_statics_nc(statics)
         _make_mock_data_nc(data_nc)
 
-        import fremor.cmor_helpers as _helpers # pylint: disable=import-outside-toplevel
-        import fremor.cmor_constants as _const # pylint: disable=import-outside-toplevel
-
         # point ARCHIVE_GOLD_DATA_DIR at a non-existent path so gold statics is skipped
         orig_archive = _const.ARCHIVE_GOLD_DATA_DIR
         orig_helpers = _helpers.ARCHIVE_GOLD_DATA_DIR
@@ -206,9 +197,6 @@ class TestLoadTripolarGrid:
         data_nc = tmp_path / 'ocean_monthly.000101-000102.sos.nc'
         _make_mock_data_nc(data_nc)
 
-        import fremor.cmor_helpers as _helpers # pylint: disable=import-outside-toplevel
-        import fremor.cmor_constants as _const # pylint: disable=import-outside-toplevel
-
         orig_archive = _const.ARCHIVE_GOLD_DATA_DIR
         orig_helpers = _helpers.ARCHIVE_GOLD_DATA_DIR
         try:
@@ -228,12 +216,13 @@ class TestLoadTripolarGrid:
         If the statics file's q-point dimensions are not exactly hpoint+1,
         load_tripolar_grid should raise ValueError.
         """
-        # data has yh=4, xh=5 but statics will have yq=3, xq=4 (wrong — should be 5, 6)
+        # data has yh=4, xh=5; correct q-point sizes would be yq=5, xq=6
+        # deliberately build statics with wrong q-point sizes yq=3 and xq=4
         statics = tmp_path / 'ocean_monthly.static.nc'
         data_nc = tmp_path / 'ocean_monthly.000101-000102.sos.nc'
         _make_mock_data_nc(data_nc, yh_size=4, xh_size=5)
 
-        # deliberately mismatched q-point sizes (yq=3 instead of 5, xq=4 instead of 6)
+        # statics with mismatched q-point sizes: yq=3 (should be yq=5), xq=4 (should be xq=6)
         ds_statics = netCDF4.Dataset(str(statics), 'w')
         yh_size, xh_size = 4, 5
         bad_yq, bad_xq = 3, 4
@@ -250,9 +239,6 @@ class TestLoadTripolarGrid:
             v = ds_statics.createVariable(name, 'f4', (dim,))
             v[:] = np.arange(ds_statics.dimensions[dim].size, dtype='f4')
         ds_statics.close()
-
-        import fremor.cmor_helpers as _helpers # pylint: disable=import-outside-toplevel
-        import fremor.cmor_constants as _const # pylint: disable=import-outside-toplevel
 
         fake_archive = tmp_path / 'fake_archive3'
         fake_archive_file = fake_archive / _const.CMIP7_GOLD_OCEAN_FILE_STUB
