@@ -3,13 +3,13 @@ requires = ["setuptools>=77.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "fremorizer"
+name = "fremor"
 description = "Model output rewriter (CMORizer) for FRE/FMS based models"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 authors = [
-    {name = "MSD Workflow Team", email="oar.gfdl.workflow@noaa.gov"}
+    {name = "Modeling Systems Division, Workflow", email="oar.gfdl.workflow@noaa.gov"}
 ]
 
 keywords = [
@@ -21,12 +21,11 @@ keywords = [
 ]
 
 dependencies = [
-        'cftime',
-        'click',
-        'cmor',
-        'netCDF4',
-        'numpy',
-        'pyyaml',
+    "click",
+    "cmor",
+    "netCDF4",
+    "numpy",
+    "pyyaml",
 ]
 
 classifiers = [
@@ -41,11 +40,11 @@ dynamic = [
 
 
 [tool.setuptools.dynamic]
-version = {attr = "fremorizer._version.__version__"}
+version = {attr = "fremor._version.__version__"}
 
 
 [project.scripts]
-fremor = 'fremorizer.cli:fremor'
+fremor = 'fremor.cli:fremor'
 
 
 [project.optional-dependencies]
@@ -61,6 +60,10 @@ test = [
     "pytest",
 ]
 
+qa = [
+    "cc-plugin-wcrp",
+]
+
 
 [tool.rstcheck]
 report_level = "WARNING"
@@ -74,3 +77,8 @@ ignore_directives = [
     "glossary",
 ]
 ignore_roles = ["ref"]
+
+[project.urls]
+Homepage = "https://github.com/NOAA-GFDL/fremor"
+Repository = "https://github.com/NOAA-GFDL/fremor"
+Changelog = "https://github.com/NOAA-GFDL/fremor/releases"

@@ -1,12 +1,12 @@
 .. _quickstart:
 
-==============================
+============================
 CMOR Quickstart (``fremor``)
-==============================
+============================
 
-This guide adapts the upstream ``fre-cli`` ``fre cmor`` README for the standalone
-``fremorizer`` package. The ``fremor`` CLI rewrites climate model output with
-CMIP-compliant metadata (\"CMORization\") and supports both CMIP6 and CMIP7
+This guide adapts the ``README`` for ``fre.cmor`` in ``NOAA-GFDL/fre-cli`` for the
+standalone ``fremor`` package. The ``fremor`` CLI rewrites climate model output
+with CMIP-compliant metadata (\"CMORization\") and supports both CMIP6 and CMIP7
 workflows.
 
 Comprehensive API and CLI reference material lives in :ref:`usage` and
@@ -16,12 +16,42 @@ what configuration is required and how to invoke each subcommand.
 Documentation and References
 ----------------------------
 
-* `fremorizer docs (latest) <https://fremorizer.readthedocs.io/en/latest/>`_
+* `fremor docs (latest) <https://fremor.readthedocs.io/en/latest/>`_
 * `fre-cli CMOR docs <https://noaa-gfdl.readthedocs.io/projects/fre-cli/en/latest/usage.html#cmorize-postprocessed-output>`_
 * `PCMDI cmor documentation <http://cmor.llnl.gov/>`_
 
 Getting Started
 ---------------
+
+Initialize CMOR resources
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Before CMORizing data, use ``fremor init`` to set up required resources:
+
+.. code-block:: bash
+
+   # Generate a CMIP6 config template and fetch CMIP6 tables
+   fremor init -m cmip6 -e exp_config.json -t cmip6-tables
+
+   # Generate a CMIP7 config template and fetch CMIP7 tables (fast mode)
+   fremor init -m cmip7 -e exp_config.json -t cmip7-tables --fast
+
+   # Only generate a config template (skip table fetching)
+   fremor init -m cmip6 -e exp_config.json
+
+   # Only fetch tables (skip config template)
+   fremor init -m cmip6 -t cmip6-tables
+
+   # Fetch a specific release tag
+   fremor init -m cmip6 -t cmip6-tables --tag 6.9.33
+
+The ``init`` command:
+
+* Generates experiment configuration JSON templates with required CMIP metadata fields
+* Fetches official MIP tables from trusted GitHub repositories:
+   - CMIP6: `pcmdi/cmip6-cmor-tables <https://github.com/pcmdi/cmip6-cmor-tables>`_
+   - CMIP7: `WCRP-CMIP/cmip7-cmor-tables <https://github.com/WCRP-CMIP/cmip7-cmor-tables>`_
+* Supports both git clone (default) and tarball download (``--fast``) methods
 
 External configuration
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -36,11 +66,11 @@ Required user inputs
 
 * **Variable list** (JSON) that maps local variable names to MIP names. A small
   example lives in the repository at
-  ``fremorizer/tests/test_files/CMORbite_var_list.json``.
+  ``fremor/tests/test_files/CMORbite_var_list.json``.
 * **Experiment configuration** (JSON) supplying metadata such as ``calendar``,
   ``grid``, and the desired output directory structure. See
-  ``fremorizer/tests/test_files/CMOR_input_example.json`` for CMIP6 or
-  ``fremorizer/tests/test_files/CMOR_CMIP7_input_example.json`` for CMIP7.
+  ``fremor/tests/test_files/CMOR_input_example.json`` for CMIP6 or
+  ``fremor/tests/test_files/CMOR_CMIP7_input_example.json`` for CMIP7.
 * **Optional CMOR YAML** if you want to batch multiple ``run`` calls via
   ``fremor yaml``. These YAML files are part of the larger FRE workflow and are
   not shipped here; point ``-y/--yamlfile`` at your project-specific YAMLs.
@@ -54,6 +84,23 @@ The entry point to all subcommands is ``fremor``:
 
    fremor --help
 
+``init``
+~~~~~~~~
+
+Initialize CMOR resources by generating experiment configuration templates and/or
+fetching MIP tables from trusted sources.
+
+.. code-block:: bash
+
+   # Generate config template and fetch tables
+   fremor init -m cmip6 -e exp_config.json -t cmip6-tables
+
+   # Use fast mode (tarball download instead of git clone)
+   fremor init -m cmip7 -e exp_config.json -t cmip7-tables --fast
+
+   # Fetch a specific release tag
+   fremor init -m cmip6 -t cmip6-tables --tag 6.9.33
+
 ``run``
 ~~~~~~~
 
@@ -64,9 +111,9 @@ configuration.
 
    fremor run --run_one --grid_label gr --grid_desc FOO_BAR_PLACEHOLD --nom_res "10000 km" \
        -d /path/to/input/netcdf/dir \
-       -l fremorizer/tests/test_files/CMORbite_var_list.json \
-       -r fremorizer/tests/test_files/cmip6-cmor-tables/Tables/CMIP6_Omon.json \
-       -p fremorizer/tests/test_files/CMOR_input_example.json \
+       -l fremor/tests/test_files/CMORbite_var_list.json \
+       -r fremor/tests/test_files/cmip6-cmor-tables/Tables/CMIP6_Omon.json \
+       -p fremor/tests/test_files/CMOR_input_example.json \
        -o /tmp/cmorized_output
 
 ``yaml``
@@ -90,7 +137,7 @@ Search MIP tables for variable definitions.
 
 .. code-block:: bash
 
-   fremor -v find --table_config_dir fremorizer/tests/test_files/cmip6-cmor-tables/Tables/ \
+   fremor -v find --table_config_dir fremor/tests/test_files/cmip6-cmor-tables/Tables/ \
        --opt_var_name sos
 
 ``varlist``
@@ -103,7 +150,7 @@ against a MIP table.
 
    fremor varlist --dir_targ /path/to/data_dir \
        --output_variable_list simple_varlist.json \
-       --mip_table fremorizer/tests/test_files/cmip6-cmor-tables/Tables/CMIP6_Omon.json
+       --mip_table fremor/tests/test_files/cmip6-cmor-tables/Tables/CMIP6_Omon.json
 
 ``config``
 ~~~~~~~~~~

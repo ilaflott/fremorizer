@@ -1,0 +1,245 @@
+name: wcrp_compliance_check
+on:
+  pull_request:
+    branches:
+  workflow_dispatch:
+
+# cancel running jobs if theres a newer push
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  wcrp-compliance-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Checkout Files
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: fremor-wcrp
+          environment-file: environment.yaml
+          conda-remove-defaults: true
+          auto-activate: false
+          miniforge-version: latest
+          channels: conda-forge,noaa-gfdl
+
+      - name: Configure Conda
+        run: |
+          echo "removing main and r channels from defaults"
+          conda config --remove channels defaults || true
+          conda config --remove channels main || true
+          conda config --remove channels r || true
+
+          echo "setting strict channel priority"
+          conda config --set channel_priority strict
+
+          echo "printing conda config just in case"
+          conda config --show
+
+      - name: Install fremor
+        run: |
+          pip install .
+
+      # ── generate test outputs (moved earlier, most fragile step) ──
+      - name: Run tests to generate output files
+        id: run_tests
+        run: |
+          echo "Running test suite to generate NetCDF outputs..."
+          echo "Using --basetemp=tmp/pytest_basetemp to preserve pytest temp artifacts"
+          echo ""
+
+          # Create basetemp parent directory
+          mkdir -p tmp
+
+          # Run ALL output-generating tests in a single pytest invocation
+          # so that --basetemp is only wiped once and all outputs are preserved.
+          echo "=========================================="
+          echo "Running all output-generating tests..."
+          echo "=========================================="
+          pytest \
+            fremor/tests/test_cmor_run_subtool.py \
+            fremor/tests/test_cmor_run_subtool_further_examples.py \
+            fremor/tests/test_cmor_yamler_subtool.py::test_cmor_yaml_subtool_dry_run_false \
+            fremor/tests/test_cli.py \
+            -v --basetemp=tmp/pytest_basetemp || true
+
+          echo ""
+          echo "Test execution complete."
+
+      # ── gather and categorize outputs ──
+      - name: Gather test outputs into centralized directory
+        id: gather_outputs
+        run: |
+          bash .github/scripts/gather_test_outputs.sh tmp/qa_test_outputs tmp/pytest_basetemp
+
+          echo "output_dir=tmp/qa_test_outputs" >> $GITHUB_OUTPUT
+
+          total_files=$(find tmp/qa_test_outputs -name "*.nc" -type f | wc -l)
+          echo "file_count=${total_files}" >> $GITHUB_OUTPUT
+
+          cmip6_files=$(find tmp/qa_test_outputs/cmip6 -name "*.nc" -type f 2>/dev/null | wc -l || echo "0")
+          cmip7_files=$(find tmp/qa_test_outputs/cmip7 -name "*.nc" -type f 2>/dev/null | wc -l || echo "0")
+
+          echo "cmip6_count=${cmip6_files}" >> $GITHUB_OUTPUT
+          echo "cmip7_count=${cmip7_files}" >> $GITHUB_OUTPUT
+
+          echo ""
+          echo "Summary: total=${total_files} cmip6=${cmip6_files} cmip7=${cmip7_files}"
+
+      - name: Verify outputs were gathered
+        if: steps.gather_outputs.outputs.file_count == '0'
+        run: |
+          echo "::warning::No NetCDF files were found after running tests"
+          echo "This may indicate that tests did not run successfully or outputs were not generated"
+          echo ""
+          echo "Checking known test output directories for debugging..."
+          echo "--- fremor/tests/test_files/outdir ---"
+          find fremor/tests/test_files/outdir -name "*.nc" -type f 2>/dev/null || echo "(empty or missing)"
+          echo "--- fremor/tests/test_files/outdir_ppan_only ---"
+          find fremor/tests/test_files/outdir_ppan_only -name "*.nc" -type f 2>/dev/null || echo "(empty or missing)"
+          echo "--- tmp/pytest_basetemp ---"
+          find tmp/pytest_basetemp -name "*.nc" -type f 2>/dev/null || echo "(empty or missing)"
+
+      # ── install cc-plugin-wcrp (after tests, since it's not needed until now) ──
+      - name: Install cc-plugin-wcrp
+        if: steps.gather_outputs.outputs.file_count != '0'
+        run: |
+          pip install cc-plugin-wcrp
+
+      - name: Configure esgvoc controlled vocabularies
+        if: steps.gather_outputs.outputs.file_count != '0'
+        run: |
+          esgvoc use universe@latest
+          esgvoc use cmip6@latest
+          esgvoc use cmip7@latest
+
+      - name: Verify cc-plugin-wcrp installation
+        if: steps.gather_outputs.outputs.file_count != '0'
+        run: |
+          echo "Listing available compliance-checker plugins..."
+          compliance-checker -l
+
+      # ── run WCRP compliance checks ──
+      - name: Run WCRP compliance checks on CMIP6 outputs
+        if: steps.gather_outputs.outputs.cmip6_count != '0'
+        run: |
+          echo "Running WCRP CMIP6 compliance checks..."
+          echo "CMIP6 files to check: ${{ steps.gather_outputs.outputs.cmip6_count }}"
+          echo ""
+
+          mkdir -p tmp/wcrp_compliance_reports
+
+          for ncfile in tmp/qa_test_outputs/cmip6/*.nc; do
+            if [ -f "$ncfile" ]; then
+              basename=$(basename "$ncfile" .nc)
+              echo ""
+              echo "=========================================="
+              echo "Checking: ${basename}"
+              echo "=========================================="
+
+              # Run wcrp_cmip6 checker - text report for logs
+              compliance-checker \
+                --test=wcrp_cmip6 \
+                --format=text \
+                --output=tmp/wcrp_compliance_reports/cmip6_${basename}_report.txt \
+                "$ncfile" || true
+
+              # Run wcrp_cmip6 checker - json report for artifact
+              compliance-checker \
+                --test=wcrp_cmip6 \
+                --format=json \
+                --output=tmp/wcrp_compliance_reports/cmip6_${basename}_report.json \
+                "$ncfile" 2>&1 || true
+
+              # Display text report summary in logs
+              echo "Report summary:"
+              head -80 tmp/wcrp_compliance_reports/cmip6_${basename}_report.txt || true
+              echo ""
+            fi
+          done
+
+      - name: Run WCRP compliance checks on CMIP7 outputs
+        if: steps.gather_outputs.outputs.cmip7_count != '0'
+        run: |
+          echo "Running WCRP compliance checks on CMIP7 files..."
+          echo "CMIP7 files to check: ${{ steps.gather_outputs.outputs.cmip7_count }}"
+          echo ""
+
+          mkdir -p tmp/wcrp_compliance_reports
+
+          for ncfile in tmp/qa_test_outputs/cmip7/*.nc; do
+            if [ -f "$ncfile" ]; then
+              basename=$(basename "$ncfile" .nc)
+              echo ""
+              echo "=========================================="
+              echo "Checking: ${basename}"
+              echo "=========================================="
+
+              # Run wcrp_cmip6 checker on CMIP7 files too
+              # (the plugin validates WCRP conventions applicable across versions)
+              compliance-checker \
+                --test=wcrp_cmip6 \
+                --format=text \
+                --output=tmp/wcrp_compliance_reports/cmip7_${basename}_report.txt \
+                "$ncfile" || true
+
+              compliance-checker \
+                --test=wcrp_cmip6 \
+                --format=json \
+                --output=tmp/wcrp_compliance_reports/cmip7_${basename}_report.json \
+                "$ncfile" 2>&1 || true
+
+              echo "Report summary:"
+              head -80 tmp/wcrp_compliance_reports/cmip7_${basename}_report.txt || true
+              echo ""
+            fi
+          done
+
+      # ── reports and artifacts ──
+      - name: Generate summary report
+        if: steps.gather_outputs.outputs.file_count != '0'
+        run: |
+          mkdir -p tmp/wcrp_compliance_reports
+
+          echo "# WCRP Compliance Check Results" > tmp/wcrp_compliance_reports/SUMMARY.md
+          echo "" >> tmp/wcrp_compliance_reports/SUMMARY.md
+          echo "**Generated:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> tmp/wcrp_compliance_reports/SUMMARY.md
+          echo "**Plugin:** [cc-plugin-wcrp](https://github.com/ESGF/cc-plugin-wcrp)" >> tmp/wcrp_compliance_reports/SUMMARY.md
+          echo "" >> tmp/wcrp_compliance_reports/SUMMARY.md
+          echo "## Files Checked" >> tmp/wcrp_compliance_reports/SUMMARY.md
+          echo "" >> tmp/wcrp_compliance_reports/SUMMARY.md
+          echo "- **Total:** ${{ steps.gather_outputs.outputs.file_count }} files" >> tmp/wcrp_compliance_reports/SUMMARY.md
+          echo "- **CMIP6:** ${{ steps.gather_outputs.outputs.cmip6_count }} files" >> tmp/wcrp_compliance_reports/SUMMARY.md
+          echo "- **CMIP7:** ${{ steps.gather_outputs.outputs.cmip7_count }} files" >> tmp/wcrp_compliance_reports/SUMMARY.md
+          echo "" >> tmp/wcrp_compliance_reports/SUMMARY.md
+
+          cp tmp/qa_test_outputs/manifest.txt tmp/wcrp_compliance_reports/manifest.txt || true
+
+          cat tmp/wcrp_compliance_reports/SUMMARY.md
+
+      - name: Upload test outputs
+        if: always() && steps.gather_outputs.outputs.file_count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: wcrp-test-outputs
+          path: tmp/qa_test_outputs/
+          retention-days: 30
+
+      - name: Upload WCRP compliance reports
+        if: always() && steps.gather_outputs.outputs.file_count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: wcrp-compliance-reports
+          path: tmp/wcrp_compliance_reports/
+          retention-days: 30
