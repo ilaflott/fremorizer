@@ -100,6 +100,44 @@ def load_tripolar_grid( ds: nc.Dataset,
     # statics file read
     statics_ds = nc.Dataset(statics_file_path, 'r')
 
+    # grab the h-point lat and lon
+    fre_logger.info('reading yh, xh')
+    yh = from_dis_gimme_dis(ds, 'yh')
+    xh = from_dis_gimme_dis(ds, 'xh') + 300.
+
+    fre_logger.info('')
+    print_data_minmax(yh[:], 'yh')
+    print_data_minmax(xh[:], 'xh')
+    fre_logger.info('')
+
+    yh_dim = len(yh)
+    xh_dim = len(xh)
+
+    # read the q-point native-grid lat lon points
+    fre_logger.info('reading yq, xq from statics file')
+    yq = from_dis_gimme_dis(statics_ds, 'yq')
+    xq = from_dis_gimme_dis(statics_ds, 'xq') + 300.
+
+    fre_logger.info('')
+    print_data_minmax(yq, 'yq')
+    print_data_minmax(xq, 'xq')
+    fre_logger.info('')
+
+    xq_dim = len(xq)
+    yq_dim = len(yq)
+
+    if any( [yh_dim != (yq_dim - 1),
+             xh_dim != (xq_dim - 1)]):
+        raise ValueError(
+            'the number of h-point lat/lon coordinates is inconsistent with the number of\n'
+            'q-point lat/lon coordinates! i.e. ( hpoint_dim != qpoint_dim-1 )\n'
+            f'yh_dim = {yh_dim}\n'
+            f'xh_dim = {xh_dim}\n'
+            f'yq_dim = {yq_dim}\n'
+            f'xq_dim = {xq_dim}'
+        )
+
+
     # grab the lat/lon points, have shape (yh, xh)
     fre_logger.info('reading geolat and geolon coordinates of cell centers from statics file')
     statics_lat = from_dis_gimme_dis(statics_ds, 'geolat')
@@ -155,43 +193,6 @@ def load_tripolar_grid( ds: nc.Dataset,
     print_data_minmax(lat_bnds[:], 'lat_bnds')
     print_data_minmax(lon_bnds[:], 'lon_bnds')
     fre_logger.info('')
-
-    # grab the h-point lat and lon
-    fre_logger.info('reading yh, xh')
-    yh = from_dis_gimme_dis(ds, 'yh')
-    xh = from_dis_gimme_dis(ds, 'xh') + 300.
-
-    fre_logger.info('')
-    print_data_minmax(yh[:], 'yh')
-    print_data_minmax(xh[:], 'xh')
-    fre_logger.info('')
-
-    yh_dim = len(yh)
-    xh_dim = len(xh)
-
-    # read the q-point native-grid lat lon points
-    fre_logger.info('reading yq, xq from statics file')
-    yq = from_dis_gimme_dis(statics_ds, 'yq')
-    xq = from_dis_gimme_dis(statics_ds, 'xq') + 300.
-
-    fre_logger.info('')
-    print_data_minmax(yq, 'yq')
-    print_data_minmax(xq, 'xq')
-    fre_logger.info('')
-
-    xq_dim = len(xq)
-    yq_dim = len(yq)
-
-    if any( [yh_dim != (yq_dim - 1),
-             xh_dim != (xq_dim - 1)]):
-        raise ValueError(
-            'the number of h-point lat/lon coordinates is inconsistent with the number of\n'
-            'q-point lat/lon coordinates! i.e. ( hpoint_dim != qpoint_dim-1 )\n'
-            f'yh_dim = {yh_dim}\n'
-            f'xh_dim = {xh_dim}\n'
-            f'yq_dim = {yq_dim}\n'
-            f'xq_dim = {xq_dim}'
-        )
 
     # create h-point bounds from the q-point lat lons
     fre_logger.info('creating yh_bnds, xh_bnds from yq, xq')
