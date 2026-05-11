@@ -41,7 +41,7 @@ def _make_mock_statics_nc(path: Path,
     geolon = ds.createVariable('geolon', 'f4', ('yh', 'xh'))
     geolon[:] = np.linspace(0, 60, yh_size * xh_size).reshape(yh_size, xh_size)
 
-    # 2-D corner (q-point) coordinates  — shape (yq, xq)
+    # 2-D corner (q-point) coordinates -- shape (yq, xq)
     geolat_c = ds.createVariable('geolat_c', 'f4', ('yq', 'xq'))
     geolat_c[:] = np.linspace(-90, 90, yq_size * xq_size).reshape(yq_size, xq_size)
     geolon_c = ds.createVariable('geolon_c', 'f4', ('yq', 'xq'))

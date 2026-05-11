@@ -84,7 +84,7 @@ def load_tripolar_grid( ds: nc.Dataset,
         fre_logger.warning( '%s',
                             f'exc = {exc}\n' + \
                              'an ocean statics file is needed, but it could not be found.\n' + \
-                             '   moving on and doing my best, but I am probably going to break' )
+                             '   raising FileNotFoundError' )
         raise FileNotFoundError('statics file not found.') from exc
 
     fre_logger.info('statics file found.')
