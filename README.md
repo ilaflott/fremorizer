@@ -2,6 +2,7 @@
 `fremor` CMORizes FRE output with `CMOR`. It is a `conda` package and it's documentation can be found on
 [`readthedocs`](https://fremor.readthedocs.io/en/latest/).
 
+[![Build conda package](https://github.com/conda-forge/fremor-feedstock/actions/workflows/conda-build.yml/badge.svg?branch=main)](https://github.com/conda-forge/fremor-feedstock/actions/workflows/conda-build.yml)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/fremor/badges/version.svg)](https://anaconda.org/conda-forge/fremor)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/fremor/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/fremor)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/fremor/badges/latest_release_relative_date.svg)](https://anaconda.org/conda-forge/fremor)
@@ -82,7 +83,7 @@ module load fremor/X.Y.Z
 ```
 
 
-### via `conda`
+### via `conda` and/or `conda-forge`
 If you have a path to a `fremor` environment you can activate it like so:
 ```bash
 conda activate some/path/to/fremor_env
@@ -91,7 +92,7 @@ conda activate some/path/to/fremor_env
 If you want your own `fremor` environment:
 ```bash
 # the environment will be named fremor_en
-conda create -n fremor_env NOAA-GFDL::fremor
+conda create -n fremor_env conda-forge::fremor
 
 # see fremor_env in the list --> activate it by name
 conda env list
@@ -102,10 +103,10 @@ or, if you've already activated a `conda` environment
 ```bash
 conda create -n empty_env
 conda activate empty_env
-conda install -c NOAA-GFDL fremor
+conda install -c conda-forge fremor
 
 # equivalent syntax
-conda install NOAA-GFDL::fremor
+conda install conda-forge::fremor
 ```
 
 
@@ -200,33 +201,61 @@ To view compliance results from a workflow/CI run:
 
 
 
+## Versioning and tags
+`fremor` uses a post-release scheme to identify development beyond the latest tagged version. To avoid confusion 
+with `fre-workflows` and `fre-cli`, which often demand that the version tags match, `fremor`'s version format is 
+`X.Y.Z[.post]`. 
 
 
 
 
+## New Release Procedure 
+This procedure is being actively tested and checked now, and may change in the future. Document any deviations 
+taken from this guide!
 
-## Tags, Releases and Versioning
-`fremor` uses a post-release scheme to identify development beyond the latest tagged version. To avoid confusion with 
-`fre-workflows` and `fre-cli`, which often demand that the version tags match, `fremor`'s version format is `X.Y.Z[.post]`. 
-
-This procedure is being actively tested and checked now, and may change in the future. Document any deviations taken from
-this guide!
-
-
-### New Release Procedure 
 To publish new release, cease merging new PRs to `main`, and carefully follow the below procedure:
-1. create a new branch off of `main`, which should be the previous tagged version + `.post`, give it a name different than the exact tag you are creating
-2. edit the version number in `fremor/_version.py` from the current one, to the desired version tag, remove `.post`, then open a PR.
-3. confirm the branch is functional by letting workflows finish, if you see green checks only, proceed. otherwise, stop and debug.
-4. at this point, light clean up style edits are OK, but functional edits are not. Do so until happy and keep the checks passing.
-
-*WCRP compliance checks may fail at this time, this pipeline is in development*
-
-*any problems or mistakes after the next step are irreversible due to package immutability so make sure things are working*
-
-5. now create the tag from the branch at this point, the tag have the format `X.Y.Z`. this triggers a workflow to publish the built package to `PyPI`. 
-6. if the `PyPI` publishing works, it should trigger an update of `fremor-feedstock` to create and publish the new package to `conda-forge` (testing this as of `0.9.3`)
-7. on github create an immutable release from your new tag and generate release notes automatically comparing to the previous tag, and associate the built `pip` package.
-8. edit the version number in `fremor/_version.py` to `X.Y.Z.post`, and merge the PR branch you used for creating the release to `main`.
 
 
+### first, create a new tag for release
+1. create a new branch off of `main`, which should be the previous tagged version + `.post`, *give it a name
+   different than the exact tag you are creating*
+3. edit the version number in `fremor/_version.py` from the current one, to the desired version tag, remove
+   `.post`, then open a PR to `main` in this repository.
+5. confirm the branch is functional by letting workflows finish, if you see green checks only, proceed. otherwise,
+   stop and debug.
+7. at this point, light clean up style edits are OK, but functional edits are not. Do so until happy and keep the
+   checks passing.
+9. now create the tag from the branch at this point locally in your terminal with `git tag X.Y.Z;`
+
+
+### second, publish release to PyPI, then github, in that order
+WARNING: *any problems or mistakes after the next step are irreversible due to package immutability so make sure 
+things are working before continuing*
+
+6. now push your tag you created locally with `git checkout X.Y.Z; git push origin HEAD:refs/tags/X.Y.Z`
+7. workflow checks are triggered by the new push to the new tag `X.Y.Z`, and one of the workflows will to publish
+   the built package to `PyPI`, check the actions tab
+9. on github, create a new release from the new tag, generate release notes automatically comparing to the previous
+   tag, and upload the built `X.Y.Z` package downloaded from `PyPI` *you cannot do this later due to immutability
+   of releases*
+
+
+### third, publish release to `conda-forge` via `fremor-feedstock` fork
+10. use (create if needed) a fork (e.g. https://github.com/ilaflott/fremor-feedstock) to create a new branch called
+    `fremorX.Y.Z`, e.g. https://github.com/ilaflott/fremor-feedstock/tree/fremor0.9.3
+11. adjust the version to `X.Y.Z` and update the `sha256` to what it says on PyPI in `recipe.yaml`
+12. open a PR to the `conda-forge/fremor-feedstock` e.g. https://github.com/conda-forge/fremor-feedstock/pull/3
+13. once checks pass, a reviewer with access to `conda-forge/fremor-feedstock` can approve and merge, kicking off the
+    rest of the publishing pipeline to `conda-forge`
+
+
+### wrap-up
+14. back to the `fremor` PR we opened intially.
+15. edit the version number in `fremor/_version.py` to `X.Y.Z.post`, let the checks pass
+16. merge the PR branch you used for creating the release to `main`
+
+what a published release on PyPI looks like: https://pypi.org/project/fremor/0.9.3/#fremor-0.9.3.tar.gz
+
+what a published PyPI package on github looks like: https://github.com/NOAA-GFDL/fremor/releases/tag/0.9.3
+
+what a published PyPI package on `conda-forge` looks like: https://anaconda.org/channels/conda-forge/packages/fremor/files
