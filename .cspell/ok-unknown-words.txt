@@ -30,6 +30,7 @@ PCMDI
 PCMDI's
 PLACEHOLD
 PPAN
+PYTHONPATH
 Pylint
 ROOTDIR
 Rbite
@@ -157,6 +158,7 @@ olevel
 openmp
 optparse
 optvarname
+orcid
 outpath
 outputfile
 overgeneral
@@ -210,5 +212,6 @@ yamlfile
 yamls
 yamltools
 zaxis
+zenodo
 zfactor
 zonavg
